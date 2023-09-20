@@ -77,6 +77,7 @@ Push your changes to your forked repository on GitHub.
 Create a pull request to the original repository. -->
 
 ## License
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 Thank you for visiting my home website SPA! I hope you enjoy exploring my home and learning more about me. If you have any questions or feedback, feel free to reach out through the contact form.
