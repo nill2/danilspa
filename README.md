@@ -12,12 +12,12 @@
 To get started with this project, you'll need to have Python and Flask installed on your machine. If you don't have them installed, you can download Python from the official Python website and install Flask using pip:
 
 '''bash'''
-pip install Flask
+~~~pip install Flask~~~
 
 Clone this repository to your local machine:
 
 '''bash'''
-git clone https://github.com/nill2/danilspa
+~~~git clone https://github.com/nill2/danilspa~~~
 
 <!--Features
 This Home SPA offers the following features:
@@ -43,7 +43,6 @@ Clone the repository as mentioned in the Getting Started section.
 Create a virtual environment to isolate project dependencies:
 
 bash
-Copy code
 python -m venv venv
 Activate the virtual environment:
 
