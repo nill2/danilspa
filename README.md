@@ -1,23 +1,22 @@
-"# danilspa" 
+
 **Welcome to my personal home website! This Single Page Application (SPA) is built using Flask and Python to showcase information about my home and a bit about myself. Feel free to explore and learn more about where I live and who I am.**
 
-***Table of Contents**
-- [Getting Started](#getting_started)
-- [Technologies Used](#technologies_used)
-- [Usage](#usage)
-- [License](#license)
+**Table of Contents**
+- [Getting Started {#getting-started}](#getting-started-getting-started)
+- [Technologies Used {#technology\_used}](#technologies-used-technology_used)
+- [License {#license}](#license-license)
 
 
 
-##Getting Started {#getting-started}
+## Getting Started {#getting-started}
 To get started with this project, you'll need to have Python and Flask installed on your machine. If you don't have them installed, you can download Python from the official Python website and install Flask using pip:
 
-'''bash
+'''bash'''
 pip install Flask
 
 Clone this repository to your local machine:
 
-'''bash
+'''bash'''
 git clone https://github.com/nill2/danilspa
 
 <!--Features
@@ -29,12 +28,12 @@ My Home: Explore details about my home, including its location, architecture, an
 
 Contact Me: Contact information and a form to send me a message or inquiry. -->
 
-***Technologies Used ***
-Flask: This web application is built using the Flask micro-framework to handle HTTP requests and render HTML templates.
+## Technologies Used {#technology_used}
+**Flask:** This web application is built using the Flask micro-framework to handle HTTP requests and render HTML templates.
 
-HTML/CSS: The front-end is created using HTML for structure and CSS for styling.
+**HTML/CSS:** The front-end is created using HTML for structure and CSS for styling.
 
-JavaScript: Some interactivity and dynamic behavior are implemented using JavaScript.
+**JavaScript:** Some interactivity and dynamic behavior are implemented using JavaScript.
 
 <!--SQLite: A SQLite database is used to store contact form submissions.
 
@@ -86,7 +85,7 @@ Push your changes to your forked repository on GitHub.
 
 Create a pull request to the original repository.-->
 
-##License {#license}
+## License {#license}
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 Thank you for visiting my home website SPA! I hope you enjoy exploring my home and learning more about me. If you have any questions or feedback, feel free to reach out through the contact form.
