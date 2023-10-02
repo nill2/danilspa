@@ -1,6 +1,10 @@
 on:
-  pull_request:
-  issue_comment:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        
 jobs:
   pr_agent_job:
     runs-on: ubuntu-latest
