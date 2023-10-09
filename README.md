@@ -1,6 +1,10 @@
-#### Welcome to my personal home website! This Single Page Application (SPA) is built using Flask and Python to showcase information about my home and a bit about myself. Feel free to explore and learn more about where I live and who I am.
 
-### Table of Contents 
+#### Welcome to my personal home website! This Single Page Application (SPA) is built using Flask and Python to showcase information about my home and a bit about myself. Feel free to explore and learn more about where I live and who I am
+
+#### NB: WIP
+
+### Table of Contents
+
 - [Getting Started](#getting-started)
 - [Technologies Used](#technologies-used)
 - [License](#license)
@@ -9,13 +13,15 @@
 
 To get started with this project, you'll need to have Python and Flask installed on your machine. If you don't have them installed, you can download Python from the official Python website and install Flask using pip:
 
-'''bash'''
-~~~pip install Flask~~~
+```shell
+pip install Flask
+```
 
 Clone this repository to your local machine:
 
-'''bash'''
-~~~git clone https://github.com/nill2/danilspa~~~
+```shell
+git clone https://github.com/nill2/danilspa
+```
 
 <!--Features
 This Home SPA offers the following features:
@@ -26,7 +32,8 @@ My Home: Explore details about my home, including its location, architecture, an
 
 Contact Me: Contact information and a form to send me a message or inquiry. -->
 
-##  Technologies Used
+## Technologies Used
+
 **Flask:** This web application is built using the Flask micro-framework to handle HTTP requests and render HTML templates.
 
 **HTML/CSS:** The front-end is created using HTML for structure and CSS for styling.
