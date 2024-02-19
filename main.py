@@ -13,8 +13,43 @@ from flask import Blueprint, render_template, Response
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
+'''
+Module Name: main.py
+Description:
+    This module defines routes and functions for a Flask application
+    that interacts with MongoDB to display images.
+'''
+
+
+import base64
+import os
+import subprocess
+from flask import Blueprint, render_template, Response
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+
 
 main = Blueprint('main', __name__)
+
+# MongoDB connection string
+MONGO_HOST = "localhost"
+if "MONGO_HOST" in os.environ:
+    MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
+    print("Getting from env vars"+MONGO_HOST)
+else:
+    try:
+        # Run the vlt command and capture its output
+        VLT_COMMAND = "vlt secrets get --plaintext MONGO_HOST"
+        MONGO_HOST = subprocess.check_output(VLT_COMMAND, shell=True, text=True)
+        print("Value from hashicorp for MONGO_HOST: "+str(MONGO_HOST))
+    except subprocess.CalledProcessError as hashi_e:
+        # Handle errors, e.g., if the secret does not exist
+        print(f"Error: {hashi_e}")
+# MongoDB database name
+DATABASE_NAME = "nill-home"
+# MongoDB collection name where the pictures are stored
+COLLECTION_NAME = "nill-home-photos"
+
 
 # MongoDB connection string
 MONGO_HOST = "localhost"
@@ -41,11 +76,18 @@ def index():
     '''
     Default page
     '''
+    '''
+    Default page
+    '''
     return render_template('index.html')
+
 
 
 @main.route('/profile')
 def profile():
+    '''
+    stub so far
+    '''
     '''
     stub so far
     '''
@@ -79,4 +121,3 @@ def fetch_image():
         # Close MongoDB connection
         if client:
             client.close()
-
