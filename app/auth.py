@@ -21,4 +21,3 @@ def logout():
     a stub for logout
     '''
     return 'this is a stub for a logout'  # redirect(url_for('auth.login'))
-

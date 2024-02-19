@@ -20,4 +20,3 @@ def create_app():  # test_config=None
     app.register_blueprint(auth_blueprint)
 
     return app
-

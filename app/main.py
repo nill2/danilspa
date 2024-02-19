@@ -52,6 +52,14 @@ def profile():
     return render_template('profile.html')
 
 
+@main.route('/cctv')
+def cctv():
+    '''
+    Define the main.cctv endpoint
+    '''
+    return render_template('cctv.html')
+
+
 @main.route('/fetch_image')
 def fetch_image():
     '''
@@ -79,4 +87,3 @@ def fetch_image():
         # Close MongoDB connection
         if client:
             client.close()
-
