@@ -66,4 +66,3 @@ jobs:
       - name: Test unit tests with pytest
         run: |
           pytest  './tests/test_unit.py'
-
