@@ -1,13 +1,20 @@
 
-#### Welcome to my personal home website! This Single Page Application (SPA) is built using Flask and Python to showcase information about my home and a bit about myself. Feel free to explore and learn more about where I live and who I am
+# Welcome to my personal home website
 
-#### NB: WIP
+## This Single Page Application (SPA) is built using Flask and Python to showcase information about my home and a bit about myself. Feel free to explore and learn more about where I live and who I am
+
+### NB: WIP
 
 ### Table of Contents
 
 - [Getting Started](#getting-started)
 - [Technologies Used](#technologies-used)
+- [Installation](#installation)
 - [License](#license)
+
+## My Personal Website
+
+Check in out here [Danil's Personal Website](https://nill-spa.onrender.com/)
 
 ## Getting Started
 
@@ -40,39 +47,44 @@ Contact Me: Contact information and a form to send me a message or inquiry. -->
 
 **JavaScript:** Some interactivity and dynamic behavior are implemented using JavaScript.
 
-<!--SQLite: A SQLite database is used to store contact form submissions.
+## Installation
 
-Installation
 Clone the repository as mentioned in the Getting Started section.
 
 Create a virtual environment to isolate project dependencies:
 
-bash
+```shell
 python -m venv venv
+```
+
 Activate the virtual environment:
 
 On Windows:
 
-bash
-Copy code
+```shell
 venv\Scripts\activate
+```
+
 On macOS and Linux:
 
-bash
-Copy code
+```shell
 source venv/bin/activate
+```
+
 Install the project dependencies:
 
-bash
-Copy code
+```shell
 pip install -r requirements.txt
+```
+
 Usage
 To run the application, use the following command:
 
-bash
-Copy code
-python app.py
-You can then access the application in your web browser by navigating to http://localhost:5000.
+```shell
+flask run
+```
+
+You can then access the application in your web browser by navigating to [localhost](http://localhost:5000).
 
 Contributing
 If you'd like to contribute to this project or report issues, please follow these steps:
