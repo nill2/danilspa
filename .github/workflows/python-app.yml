@@ -63,10 +63,7 @@ jobs:
       - name: Run Pylint
         run: |
           pylint $(git ls-files '*.py')
-      - name: Run unit tests
+      - name: Test unit tests with pytest
         run: |
-          echo "CurrentDirectory: $CurrentDirectory"
-          echo ls
-          cd $CurrentDirectory
-          pytest ./tests/test_unit.py
+          pytest  './tests/test_unit.py'
 
