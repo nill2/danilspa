@@ -16,7 +16,7 @@ TestMongoDBInteraction:
     Additional test cases for MongoDB interaction can be added as needed.
 
 Usage:
-    Run this module to execute the unit tests.
+    Run this module to execute the unit  tests.
 """
 
 import sys
