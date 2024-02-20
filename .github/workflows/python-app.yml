@@ -66,6 +66,7 @@ jobs:
       - name: Run unit tests
         run: |
           echo "CurrentDirectory: $CurrentDirectory"
-          cd "$CurrentDirectory"
+          echo ls
+          cd $CurrentDirectory
           pytest ./tests/test_unit.py
 
