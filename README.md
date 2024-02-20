@@ -99,7 +99,7 @@ Make your changes and commit them with descriptive commit messages.
 
 Push your changes to your forked repository on GitHub.
 
-Create a pull request to the original repository. -->
+Create a pull request to the original repository.
 
 ## License
 
