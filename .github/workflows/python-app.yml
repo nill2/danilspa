@@ -46,6 +46,7 @@ jobs:
       - name: Install tools from PyPI
         run: |
           pip install pylint
+          pip install flask
           pip install psutil
           pip install pymongo
           pip install hvac
