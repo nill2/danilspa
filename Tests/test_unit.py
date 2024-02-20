@@ -19,10 +19,19 @@ Usage:
     Run this module to execute the unit tests.
 """
 
+import sys
+import os
 import unittest
 from unittest.mock import patch, MagicMock
 from flask_testing import TestCase
-from app import create_app
+
+# Add the parent directory of the current file to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+# Now you can import the app module
+from app import create_app  # pylint: disable=all  # noqa
 
 
 class TestAppRoutes(TestCase):
