@@ -11,6 +11,39 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if the user is logged in (you need to adjust this based on your authentication logic)
+            var isLoggedIn = false; // For demonstration purposes, set to false initially
+
+            // Show or hide login/logout buttons based on user login status
+            if (isLoggedIn) {
+                $("#loginButton").hide();
+                $("#logoutButton").show();
+            } else {
+                $("#loginButton").show();
+                $("#logoutButton").hide();
+            }
+
+            // Handle click event for login button
+            $("#loginButton").click(function() {
+                // Perform login logic here
+                isLoggedIn = true;
+                // Hide login button and show logout button
+                $("#loginButton").hide();
+                $("#logoutButton").show();
+            });
+
+            // Handle click event for logout button
+            $("#logoutButton").click(function() {
+                // Perform logout logic here
+                isLoggedIn = false;
+                // Hide logout button and show login button
+                $("#logoutButton").hide();
+                $("#loginButton").show();
+            });
+        });
+    </script>
     {% endblock %}
 </head>
 <body>
@@ -22,16 +55,17 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
-                    <a href="{{ url_for('main.profile') }}" class="btn btn-outline-secondary" role="button">About me</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('main.profile') }}" class="btn btn-outline-secondary" role="button" style="margin-left: 4px;">Account</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary" role="button">About me</a>
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0">
                 <a href="{{ url_for('main.cctv') }}" class="btn btn-outline-primary" role="button">Our home</a>
-                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary" role="button" style="margin-left: 4px;">Login</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger" role="button" style="margin-left: 4px;">Log Out</a>
+                <li class="nav-item" id="loginButton">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary" role="button" style="margin-left: 4px;">Login</a>
+                </li>
+                <li class="nav-item" id="logoutButton">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger" role="button" style="margin-left: 4px;">Log Out</a>
+                </li>
             </form>
         </div>
     </nav>
