@@ -52,6 +52,7 @@ jobs:
           pip install hvac
           pip install flake8
           pip install pytest
+          pip install flask-testing
       - name: Lint with flake8
         run: |
           cd "$CurrentDirectory"
@@ -62,5 +63,6 @@ jobs:
       - name: Run Pylint
         run: |
           pylint $(git ls-files '*.py')
-
-
+      - name: Test unit tests with pytest
+        run: |
+          pytest  './tests/test_unit.py'
