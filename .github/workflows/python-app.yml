@@ -53,6 +53,7 @@ jobs:
           pip install flake8
           pip install pytest
           pip install flask-testing
+          pip install unittest
       - name: Lint with flake8
         run: |
           cd "$CurrentDirectory"
