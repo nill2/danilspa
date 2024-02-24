@@ -1,10 +1,69 @@
-/IaC_ftptomongo/service-account
-/IaC_ftptomongo/service-account/key-file.json
-/IaC_ftptomongo/service-account/smooth-verve-400915-9cbffa44b988.json
-/IaC_ftptomongo/service-account/smooth-verve-400915-fe3fddd0f8c3.json
-/IaC_ftptomongo/.terraform/providers/registry.terraform.io/hashicorp/google/5.0.0/windows_amd64
-/ftptomongo/~
-/ftptomongo/.pytest_cache
-/ftptomongo/__pycache__
-/IaC_ftptomongo/key-file.json
-/IaC_ftptomongo/.terraform/providers/registry.terraform.io/hashicorp/google/5.0.0/windows_amd64/terraform-provider-google_v5.0.0_x5.exe
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+# Usually these files are written by a python script from a template
+# before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Flask stuff
+instance/
+.webassets-cache
+.pytest_cache/
+
+# Flask-specific configuration
+.env
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.venv
+venv/
