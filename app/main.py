@@ -14,6 +14,7 @@ import boto3
 from flask import Blueprint, render_template, Response
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from botocore.exceptions import ClientError
 
 
 # Configure the logger (optional)
@@ -91,13 +92,15 @@ def delete_s3_file(s3_file_url):
         s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
 
         # Create an S3 client
-        s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
+        s3 = boto3.client('s3',
+                          aws_access_key_id=AWS_ACCESS_KEY,
+                          aws_secret_access_key=AWS_SECRET_KEY)
 
         # Delete the file from the S3 bucket
         s3.delete_object(Bucket=bucket_name, Key=s3_key)
-        logger.info(f"Deleted file from S3: {s3_file_url}")
-    except Exception as e:
-        logger.error(f"Error deleting file from S3: {e}")
+        logger.info("Deleted file from S3: %s", s3_file_url)
+    except ClientError as e:
+        logger.error("Error deleting file from S3: %s", e)
 
 
 @main.route('/')
@@ -125,7 +128,10 @@ def cctv():
 
 
 @main.route('/fetch_image')
-def fetch_image():
+def fetch_image():  # pylint: disable=R0914
+    '''
+    Fetch an image data from MongoDB and Image itself from S3
+    '''
     try:
         # Connect to MongoDB
         client = MongoClient(MONGO_HOST)
@@ -138,19 +144,21 @@ def fetch_image():
             if last_picture.get("s3_file_url"):
                 # Extract the S3 file URL from the document
                 s3_file_url = last_picture["s3_file_url"]
-                logger.info("getting pic from S3: %s" % s3_file_url)
+                logger.info("getting pic from S3: %s", s3_file_url)
                 try:
                     # Extract bucket name and key from the S3 file URL
                     bucket_name = s3_file_url.split("//")[1].split(".")[0]
                     s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
 
                     # Create an S3 client
-                    s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
+                    s3 = boto3.client('s3',
+                                      aws_access_key_id=AWS_ACCESS_KEY,
+                                      aws_secret_access_key=AWS_SECRET_KEY)
 
                     # Download the file from the S3 bucket to a temporary file
-                    local_temp_file_path = 'temp_image.jpg'  # Use a temporary file to store the downloaded image
+                    local_temp_file_path = 'temp_image.jpg'
                     s3.download_file(bucket_name, s3_key, local_temp_file_path)
-                    
+
                     # Read the content of the downloaded file
                     with open(local_temp_file_path, 'rb') as file:
                         image_content = file.read()
@@ -167,8 +175,8 @@ def fetch_image():
                         print(f"Temporary file deleted: {local_temp_file_path}")
 
                     return response
-                except Exception as e:
-                    logger.error(f"Error downloading file from S3: {e}")
+                except ClientError as e:
+                    logger.error("Error downloading file from S3: %s", e)
             else:
                 # Get the picture data from the 'data' field
                 logger.info("getting pic from from the data field from MongoDB")
@@ -180,8 +188,8 @@ def fetch_image():
         return "Couldn't find a picture"
     except ConnectionFailure as e:
         return f"Error connecting to MongoDB: {e}"
-    except Exception as e:
-        logger.error(f"Error fetching image: {e}")
+    except Exception as e:  # pylint: disable=W0718
+        logger.error("Error fetching image: %s", e)
         return "Error fetching image"
     finally:
         # Close MongoDB connection
