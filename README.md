@@ -14,7 +14,16 @@
 
 ## My Personal Website
 
-Check in out here [Danil's Personal Website](https://nill-spa.onrender.com/)
+This Danil Kabanov Home SPA offers the following features:
+
+About Myself: Learn more about me, including my CV.
+
+My Home: Explore CCTV cameras from my home.
+It's an old camera that can put pictures only in FTP
+so I creates an FTP server emulator that receive pictures and
+puts data into service MongoDB and stores the picture into AWS S3 storage.
+
+Check it out here [Danil's Personal Website](https://nill-spa.onrender.com/)
 
 ## Getting Started
 
@@ -29,15 +38,6 @@ Clone this repository to your local machine:
 ```shell
 git clone https://github.com/nill2/danilspa
 ```
-
-<!--Features
-This Home SPA offers the following features:
-
-About Myself: Learn more about me, including my interests and hobbies.
-
-My Home: Explore details about my home, including its location, architecture, and a photo gallery.
-
-Contact Me: Contact information and a form to send me a message or inquiry. -->
 
 ## Technologies Used
 
