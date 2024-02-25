@@ -1,25 +1,128 @@
-{% extends "base.html" %} {% block head %} {{ super() }}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename= 'extended_beauty.css') }}"
-/>
-{% endblock %}{% block content%}
-<center>
-
-  <img
-
-    src="{{ url_for('static', filename= 'images/DanilKabanov_ss.jpg') }}"  
-
-    alt="me"
-
-    height="200px"
-
-  />
-
-<h1> Hello!</h1>
-
-<h2> My name is Danil Kabanov and I am an Engineering Manager. </h2>  
-  
-<p> Visit my profile <br /> at  <a href="https://www.linkedin.com/in/dankabanov/"> LinkedIn </a> </p>
-
+{% extends "base.html" %}
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='extended_beauty.css') }}">
+{% endblock %}
+{% block content %}
+  <div class="container">
+    <div class="header">
+      <img src="{{ url_for('static', filename= 'images/DanilKabanov_ss.jpg') }}" alt="Danil Kabanov" style="height: auto; width: 20%;">
+      <h1>Hello!</h1>
+      <h2>My name is Danil Kabanov and I am an Engineering Manager.</h2>
+      <p>Contact me:</p>
+      <ul>
+        <li>Phone: +31 6 43198736</li>
+        <li>Email: danil.d.kabanov@gmail.com</li>
+        <li>LinkedIn: <a href="https://www.linkedin.com/in/dankabanov/">linkedin.com/in/dankabanov</a></li>
+        <li>GitHub: <a href="https://github.com/nill2">github.com/nill2</a></li>
+      </ul>
+    </div>
+    <div class="content">
+      <h3><b>Summary</b></h3>
+      <p>
+        Over the last 15+ years, I’ve steered a range of high-profile technical projects at leading financial institutions and PaaS companies focusing on Fintech. My leadership style highlights a product-focused and developer-first culture where I provide on-the-ground guidance of high-load and Cloud-based systems. I thrive in creating, developing products, delivering complex projects, and building robust teams.
+      </p>
+      <h3><b>Relevant Experience:</b></h3>
+      <h4><b>February 2023 - present</b></h4>
+      <p>
+        <b>SettleMint, VP of Engineering</b><br>
+        Product: A SaaS/onPrem cloud-agnostic DevOps automation platform for developer productivity<br>
+        Tasks:<br>
+        - Develop an engineering team strategy aligned with key business goals<br>
+        - Establish streamlined and efficient processes<br>
+        - Foster a robust engineering culture within the team<br>
+        - Align product features with enterprise client needs<br>
+        Achievements:<br>
+        - Elevated the product's credibility among clients by successfully passing the SOC2 Type II assessment<br>
+        - Improved quality by introducing end-to-end tests for Pull Requests (PRs) and releases (TypeScript; CI/CD: GHA, Cypress, Pulumi, Kubernetes; Clouds: AWS, GCP, Azure) and incorporating unit tests (Jest)<br>
+        - Instituted a continuous improvement program<br>
+        - Introduced a guardian role within the team to shield the rest of the team from disturbances and enhance overall team efficiency<br>
+        - Implemented and executed a talent growth strategy in the engineering team<br>
+      </p>
+      <br>
+      <h4><b>September 2021 - February 2023</b></h4>
+      <p>
+        <b>EPAM Netherlands, Senior Engineering Manager</b><br>
+        Tasks:
+        - Shape a security practice for the largest telecom operator in the EU
+        - Enhance SDLC efficiency for a team of 150 developers (Java, JS, React; Testing: XRay, Zephyr; CI: Jenkins, SonarQube)
+        - Devise a development strategy in collaboration with a leading accommodation service provider
+        - Prepare Requests for Proposal (RFP) and grant applications
+        - Improve collaboration between Engineering and product teams (shape a product roadmap, controlled CR process, predictable delivery)
+        Achievements:
+        - Created a Secure Software Development Life Cycle (SSDLC) to ensure product security and compliance with security standards, paving the way for SOC2 and ISO27001 certifications (OWASP top 10 vulnerabilities testing  automation, SAST,  DAST)
+        - Improved delivery stability by tuning SDLC and introducing a product roadmap
+        - Investigated top accommodation service provider requirements and initiated projects accordingly
+        - Collaborated organization-wide to formulate and submit a grant request for an open-source, independently secure web browser<br>
+      </p>
+      <br>
+      <h4><b>September 2018  - April 2021</b></h4>
+      <p>
+        <b>Insolar, Head of Development Center</b><br>
+        Tasks:
+        Engineering management
+        - Create and run a dev team for customer projects
+        - Set up an efficient development process
+        - Deliver internal product development
+        Project management:
+        - lead a lighthouse project with a leading payment system
+        Product management
+        - Help a client shape the solution to find a product market fit
+        - Devise a product strategy and roadmap
+        - Shape and update a prioritized backlog for the team, keep the team in the loop
+        - Conducted product research for new solutions for the platform we built
+        Achievements:
+        - Founded and managed Insolar’s development center(20+ engineers) allowing the company to develop solutions on top of the in-house-built platform and get the first lighthouse client
+        - Enhanced the company's creditability for clients by proving the INSOLAR platform throughput
+        - Implemented and honed Dual Track Agile, Scrum, and Kanban frameworks in development teams
+        - Drove a team on an international project with a team spread all over the Globe with a key (Fortune-500) client based on an in-house build platform(Microservices, Go, Vue, GitHub, Ansible)<br>
+      </p>
+      <br>
+      <h4><b>July 2013 - September 2018</b></h4>
+      <p>
+        <b>Biggest East European Bank, Director/Head of Payment Systems Development Center</b><br>
+        Products:  one of the world's biggest p2b payment systems, AI-powered chatbot, core banking systems
+        - Led the p2b payment system creation (20M transactions/day, about 1k online and 120k off-line integrations) Tech stack: Java, Oracle, Kafka, Apache ignite, XSLT, PL/SQL, Service Oriented Architecture
+        - Founded and managed a software development center ( 200+ engineers, 7 locations) 
+        - Headed an ERP implementation project (Scale: Team members over 400, Users over 150 000, over 100M Clients, Millions of transactions per day)
+        - Collaborated across the organization to shape and implement innovational products(ML chatbots, Blockchain)
+        - Drove a risk culture implementation project with the result of 0 critical/high issues for 2 years and SLA fine nines fully supported for a Business Critical+ system <br>
+      </p>
+      <br>
+      <h4><b>June 2008 - July 2013</b></h4>
+      <p>
+        <b>Center of Financial Technologies, Project Manager/Director</b><br>
+        - Delivered 20+ large-scale Core Banking and Retail system implementation projects in top-notch banks/FinTechs
+        - Actively supported the team by contributing code, analytical, and architectural inputs
+        - Leading a new-generation platform development and the first client implementation<br>
+      </p>
+      <br>
+      <h4><b>2003 - 2007</b></h4>
+      <p>
+        <b> FinTech companies and Banks, Developer/Project Manager/Head of IT department</b><br>
+        - Established and led the IT department in the bank branch
+        - Created from scratch and implemented a utility billing program (FoxPro, Clipper), ensuring stable payments for the entire city
+        - Drove FinTech systems implementation and development projects (C++, Clipper, Lotus Script, Delphi)
+        - Developed an integration tool with the Western Union system that speeds up customer service by 30%<br>
+      </p>
+      <br><br>
+      <h3><b>Education</b></h3>
+      <ul>
+        <li>2015 - 2016: INSEAD, Corporate MBA</li>
+        <li>2006 - 2008: Master of Economics, St. Petersburg Polytechnic University</li>
+        <li>2000 - 2005: Master of Mathematics, Tomsk State University</li>
+      </ul>
+      <h3><b>Certificates and Diplomas</b></h3>
+      <ul>
+        <li>2017: Higher School of Economics Startup Acceleration program</li>
+        <li>2017: Blockchain Technology, MIT Professional Education (Boston)</li>
+        <li>2014: Certified Project Manager IPMA Level C</li>
+      </ul>
+      <h3><b>Additional Notes</b></h3>
+      <p>
+        Top places in regional chess championships, Math competitions<br>
+        Hands-on: Python, Flask, PL/SQL, CI/CD(GHA), Kubernetes, MongoDB, PostgreSQL
+      </p>
+    </div>
+  </div>
 {% endblock %}
