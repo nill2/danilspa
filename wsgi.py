@@ -6,7 +6,9 @@ import subprocess
 import pyroscope   # pylint: disable=import-error
 from app import create_app
 
+
 PYROSCOPE_SERVER_ADDRESS = "http://138.2.149.246:4040"
+
 if "PYROSCOPE_SERVER_ADDRESS" in os.environ:
     PYROSCOPE_SERVER_ADDRESS = os.getenv("PYROSCOPE_SERVER_ADDRESS", None)
     print("Getting PYROSCOPE_SERVER_ADDRESS from env vars: "+PYROSCOPE_SERVER_ADDRESS)
