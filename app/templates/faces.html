@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='extended_beauty.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="center">
+        <h1>Faces</h1>
+        <img id="face-image" src="" width="640" height="480" alt="Face Image">
+        <div id="image-info">
+            <p>Image ID: <span id="image-id"></span></p>
+            <p>Upload Date: <span id="bsonTime"></span></p>
+        </div>
+        <div class="navigation-buttons">
+            <button id="prev-button" class="btn btn-secondary">Previous</button>
+            <button id="next-button" class="btn btn-secondary">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentIndex = 0;
+
+        function fetchFaceImage(index) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        var image = document.getElementById('face-image');
+                        image.src = "data:image/jpeg;base64," + response.imageData;
+                        
+                        // Update image info
+                        document.getElementById('image-id').textContent = response.imageId;
+                        document.getElementById('bsonTime').textContent = response.bsonTime;
+                    } else {
+                        console.error('Failed to fetch face image:', xhr.status, xhr.statusText);
+                    }
+                }
+            };
+            xhr.open('GET', '/fetch_face_image/' + index, true);
+            xhr.send();
+        }
+
+        document.getElementById('prev-button').addEventListener('click', function() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                fetchFaceImage(currentIndex);
+            }
+        });
+
+        document.getElementById('next-button').addEventListener('click', function() {
+            currentIndex++;
+            fetchFaceImage(currentIndex);
+        });
+
+        // Initial load
+        fetchFaceImage(currentIndex);
+    </script>
+{% endblock %}

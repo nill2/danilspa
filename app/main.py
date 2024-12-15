@@ -15,16 +15,17 @@ from flask import Blueprint, render_template, Response
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from botocore.exceptions import ClientError
+from datetime import datetime
+import json
 
 
 # Configure the logger (optional)
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+)
 
 # Define the logger
 logger = logging.getLogger(__name__)
-
 
 main = Blueprint('main', __name__)
 
@@ -42,6 +43,7 @@ else:
     except subprocess.CalledProcessError as hashi_e:
         # Handle errors, e.g., if the secret does not exist
         print(f"Error: {hashi_e}")
+
 # MongoDB database name
 DATABASE_NAME = "nill-home"
 # MongoDB collection name where the pictures are stored
@@ -125,6 +127,124 @@ def cctv():
     Define the main.cctv endpoint
     '''
     return render_template('cctv.html')
+
+
+@main.route('/faces')
+def faces():
+    '''
+    Page to display images from the faces collection with their dates
+    '''
+    try:
+        # Connect to MongoDB
+        client = MongoClient(MONGO_HOST)
+        db = client[DATABASE_NAME]
+        collection = db["nill-home-faces"]
+
+        # Fetch all documents and include the `bsonTime` along with image data
+        images_with_dates = []
+        for doc in collection.find().sort('_id', -1):  # Sort by `_id` descending
+            image_data = {
+                "image_id": str(doc["filename"]),  # Use _id as a unique identifier
+                "bsonTime": doc.get("bsonTime", "Unknown")
+            }
+            images_with_dates.append(image_data)
+
+        logger.info(f"Fetched {len(images_with_dates)} images with dates for faces page.")
+        return render_template('faces.html', images_with_dates=images_with_dates)
+    except ConnectionFailure as e:
+        logger.error(f"Error connecting to MongoDB: {e}")
+        return "Error loading faces page", 500
+    except Exception as e:
+        logger.error(f"Unexpected error loading faces page: {e}")
+        return "Unexpected error occurred", 500
+    finally:
+        if 'client' in locals() and client:
+            client.close()
+
+
+@main.route('/fetch_face_image/<int:image_index>')
+def fetch_face_image(image_index):  # noqa
+    '''
+    Fetch an image data from MongoDB (nill-home-faces collection) by index
+    '''
+    try:
+        # Connect to MongoDB
+        client = MongoClient(MONGO_HOST)
+        db = client[DATABASE_NAME]
+        collection = db["nill-home-faces"]
+
+        # Fetch and validate image list
+        images = list(collection.find().sort('_id', -1))  # Sort by `_id` descending
+        logger.info(f"Number of images fetched from MongoDB: {len(images)}")
+        if not images:
+            logger.error("No images found in the collection.")
+            return "No images found", 404
+
+        # Validate index
+        logger.info(f"Requested image index: {image_index}")
+        if not (0 <= image_index < len(images)):
+            logger.error(f"Invalid image index: {image_index}. Must be between 0 and {len(images) - 1}.")
+            return "Invalid image index", 404
+
+        # Fetch the document at the given index
+        image_doc = images[image_index]
+        # logger.info(f"Fetched document: {image_doc}")
+
+        # Prepare response data
+        bson_time = image_doc.get("bsonTime")
+        logger.info(f"bsonTime field value: {bson_time}")
+        logger.info(f"bsonTime type: {type(bson_time)}")
+        response_data = {
+            "imageId": str(image_doc["filename"]),
+            # Convert bsonTime (datetime) to string if it's a datetime object
+            "bsonTime": bson_time.strftime('%Y-%m-%d %H:%M:%S') if isinstance(bson_time, datetime) else "Unknown"
+        }
+
+        # Check if `s3_file_url` exists and is valid
+        if "s3_file_url" in image_doc and image_doc["s3_file_url"]:
+            s3_file_url = image_doc["s3_file_url"]
+            logger.info(f"Fetching face image from S3: {s3_file_url}")
+            try:
+                bucket_name = s3_file_url.split("//")[1].split(".")[0]
+                s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
+                s3 = boto3.client('s3',
+                                  aws_access_key_id=AWS_ACCESS_KEY,
+                                  aws_secret_access_key=AWS_SECRET_KEY)
+                local_temp_file_path = 'temp_face_image.jpg'
+                s3.download_file(bucket_name, s3_key, local_temp_file_path)
+                with open(local_temp_file_path, 'rb') as file:
+                    image_content = file.read()
+                os.remove(local_temp_file_path)
+                encoded_image_data = base64.b64encode(image_content).decode('utf-8')
+
+                # Include image data in the response
+                response_data["imageData"] = encoded_image_data
+                return Response(json.dumps(response_data), mimetype='application/json')
+            except ClientError as e:
+                logger.error(f"Error fetching image from S3: {e}")
+                return "Error fetching image from S3", 500
+        elif "data" in image_doc and image_doc["data"]:
+            # Get image from MongoDB's `data` field
+            logger.info("Fetching image from MongoDB data field.")
+            picture_data = image_doc["data"]
+            try:
+                encoded_picture_data = base64.b64encode(picture_data).decode('utf-8')
+
+                # Include image data in the response
+                response_data["imageData"] = encoded_picture_data
+                return Response(json.dumps(response_data), mimetype='application/json')
+            except Exception as e:
+                logger.error(f"Error encoding image data: {e}")
+                return "Error processing image data", 500
+        else:
+            logger.error(f"Document at index {image_index} has no valid fields (s3_file_url or data).")
+            return "Image data not found", 404
+    except Exception as e:  # pylint: disable=W0718
+        logger.error(f"Unexpected error fetching face image: {e}")
+        return "Unexpected error occurred", 500
+    finally:
+        if 'client' in locals() and client:
+            client.close()
 
 
 @main.route('/fetch_image')
