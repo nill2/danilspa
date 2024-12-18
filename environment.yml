@@ -1,8 +1,8 @@
-name: ftptomongo  
+name: ftptomongo
 channels:
   - defaults
 dependencies:
-  - python=3.10  # Specify the Python version you want
+  - python=3.10 # Specify the Python version you want
   - pip
   - numpy
   - pandas

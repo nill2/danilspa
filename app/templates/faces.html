@@ -30,7 +30,7 @@
                         var response = JSON.parse(xhr.responseText);
                         var image = document.getElementById('face-image');
                         image.src = "data:image/jpeg;base64," + response.imageData;
-                        
+
                         // Update image info
                         document.getElementById('image-id').textContent = response.imageId;
                         document.getElementById('bsonTime').textContent = response.bsonTime;

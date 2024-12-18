@@ -1,23 +1,32 @@
-'''
-Process the auth requests
-'''
-from flask import render_template, Blueprint
+"""Process the authentication requests."""
+
+from typing import Any, Callable, TypeVar, Union
+from flask import Response, render_template, Blueprint
+
+auth = Blueprint("auth", __name__)
+
+ResponseReturnValue = Union[Response, str]
+
+F = TypeVar("F", bound=Callable[..., ResponseReturnValue])
 
 
-auth = Blueprint('auth', __name__)
+def route_decorator(path: str, **kwargs: Any) -> Callable[[F], F]:
+    """Use a typed decorator for Flask routes."""
+
+    def decorator(func: F) -> F:
+        # Correctly return the decorated function
+        return auth.route(path, **kwargs)(func)  # type: ignore
+
+    return decorator
 
 
-@auth.route('/login', methods=['GET', 'POST'])
-def login():
-    '''
-    a stub for login
-    '''
-    return render_template('login.html')
+@route_decorator("/login", methods=["GET", "POST"])
+def login() -> ResponseReturnValue:
+    """Render the login page."""
+    return render_template("login.html")
 
 
-@auth.route('/logout', methods=['GET', 'POST'])
-def logout():
-    '''
-    a stub for logout
-    '''
-    return 'this is a stub for a logout'  # redirect(url_for('auth.login'))
+@route_decorator("/logout", methods=["GET", "POST"])
+def logout() -> str:
+    """Log the user out."""
+    return "This is a stub for a logout"  # Replace with redirect(url_for('auth.login')) if needed.
