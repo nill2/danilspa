@@ -59,9 +59,9 @@ class TestAppRoutes(TestCase):
         This test case verifies that the index route returns a status code of 200
         and uses the correct HTML template ('index.html').
         """
-        response = self.client.get('/')
+        response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assert_template_used('index.html')
+        self.assert_template_used("index.html")
 
     def test_profile_route(self):
         """
@@ -70,9 +70,9 @@ class TestAppRoutes(TestCase):
         This test case verifies that the profile route returns a status code of 200
         and uses the correct HTML template ('profile.html').
         """
-        response = self.client.get('/profile')
+        response = self.client.get("/profile")
         self.assertEqual(response.status_code, 200)
-        self.assert_template_used('profile.html')
+        self.assert_template_used("profile.html")
 
 
 class TestMongoDBInteraction(unittest.TestCase):
@@ -83,7 +83,7 @@ class TestMongoDBInteraction(unittest.TestCase):
     such as testing the connection to MongoDB.
     """
 
-    @patch('app.main.MongoClient')
+    @patch("app.main.MongoClient")
     def test_mongo_connection(self, mock_mongo_client):
         """
         Test MongoDB connection.
@@ -96,5 +96,5 @@ class TestMongoDBInteraction(unittest.TestCase):
         # Add test for connecting to MongoDB
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

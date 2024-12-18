@@ -4,8 +4,8 @@ name: Python application
 on:
   push:
     branches:
-      - '**'
-      - '!main'
+      - "**"
+      - "!main"
   workflow_dispatch:
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
-      matrix: 
+      matrix:
         version: [1]
 
     steps:
@@ -27,7 +27,7 @@ jobs:
       - name: Set up Python 3.10
         uses: actions/setup-python@v3
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Set up packages
         uses: nill2/gha/install-packages@main

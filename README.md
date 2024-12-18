@@ -1,4 +1,3 @@
-
 # Welcome to my personal home website
 
 ## This Single Page Application (SPA) is built using Flask and Python to showcase information about my home and a bit about myself. Feel free to explore and learn more about where I live and who I am
