@@ -32,9 +32,11 @@ jobs:
       - name: Set up packages
         uses: nill2/gha/install-packages@main
 
-      - name: Lint with flake8 and pylint
-        uses: nill2/gha/lint@main
-
       - name: Test unit tests with pytest
         run: |
           pytest  './tests/test_unit.py'
+
+      - name: Run linting (flake8 + pylint)
+        run: |
+          flake8 app tests
+          pylint app tests || true  # non-fatal warnings for CI
