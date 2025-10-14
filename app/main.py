@@ -50,6 +50,11 @@ FTP_IP = os.getenv("FTP_IP", "127.0.0.1")
 DATABASE_NAME = "nill-home"
 COLLECTION_NAME = "nill-home-photos"
 
+# Auto-detect environment and build backend URL
+IS_PRODUCTION = os.getenv("RENDER", "false").lower() == "true"
+BACKEND_BASE_URL = f"https://{FTP_IP}" if IS_PRODUCTION else f"http://{FTP_IP}:8001"
+logger.info("Using backend base URL: %s", BACKEND_BASE_URL)
+
 
 # -------------------------------------------------------------------
 # AWS configuration
@@ -154,7 +159,7 @@ def ml_known() -> str:
 def api_ml_known_faces() -> Response:
     """Get list of known face names from backend API."""
     try:
-        response = requests.get(f"http://{FTP_IP}:8001/faces/known_names", timeout=15)
+        response = requests.get(f"{BACKEND_BASE_URL}/faces/known_names", timeout=15)
         return Response(
             response.content, status=response.status_code, mimetype="application/json"
         )
@@ -167,14 +172,13 @@ def api_ml_known_faces() -> Response:
 def api_ml_search() -> Response:
     """Proxy search for known or unknown faces via backend API."""
     selected = request.json or []
-    base_url = f"http://{FTP_IP}:8001"
 
     try:
         if not selected:
-            response = requests.get(f"{base_url}/faces/unknown", timeout=15)
+            response = requests.get(f"{BACKEND_BASE_URL}/faces/unknown", timeout=15)
         else:
             response = requests.post(
-                f"{base_url}/faces/known",
+                f"{BACKEND_BASE_URL}/faces/known",
                 json=selected,
                 headers={"Content-Type": "application/json"},
                 timeout=15,
