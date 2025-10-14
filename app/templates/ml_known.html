@@ -27,8 +27,14 @@
 <p id="noResults" class="text-danger text-center" style="display:none;">No photos found.</p>
 
 <script>
-const FTP_IP = "{{ FTP_IP | default('132.226.193.223') }}";
-const API_BASE = `http://${FTP_IP}:8001`;
+const FTP_DOMAIN = "{{ FTP_DOMAIN | default('132.226.193.223') }}";
+
+// ✅ Automatically switch between HTTP/HTTPS based on page protocol
+const API_BASE =
+  window.location.protocol === "https:"
+    ? `https://${FTP_DOMAIN}`
+    : `http://${FTP_DOMAIN}:8001`;
+
 let results = [];
 let currentIndex = 0;
 
@@ -129,7 +135,7 @@ function showPhoto() {
 
   // ✅ Use HTTPS if frontend runs on Render
   const protocol = window.location.protocol === "https:" ? "https" : "http";
-  const imgSrc = `${protocol}://${FTP_IP}:8001/face_image/${safeFilename}`;
+  const imgSrc = `${protocol}://${FTP_DOMAIN}:8001/face_image/${safeFilename}`;
 
   console.log("Displaying photo:", imgSrc);
 
