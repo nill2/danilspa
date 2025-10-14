@@ -10,26 +10,21 @@
     </div>
 
     <script>
-        function refreshImage() {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        var image = document.getElementById('cctv-image');
-                        image.src = "data:image/jpeg;base64," + xhr.responseText;
-                    } else {
-                        console.error('Failed to fetch image:', xhr.status, xhr.statusText);
-                    }
-                }
-            };
-            xhr.open('GET', '/fetch_image', true);
-            xhr.send();
+        async function refreshImage() {
+          try {
+            const response = await fetch('{{ url_for("main.fetch_image") }}');
+            if (!response.ok) throw new Error("HTTP " + response.status);
+            const data = await response.text();
+            document.getElementById("cctv-image").src = "data:image/jpeg;base64," + data;
+          } catch (err) {
+            console.error("Failed to fetch image:", err);
+          }
         }
 
-        // Refresh the image every 5 seconds
+        // Refresh every 5 seconds
         setInterval(refreshImage, 5000);
-
-        // Initial image load
         refreshImage();
     </script>
+
+
 {% endblock %}

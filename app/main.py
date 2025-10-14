@@ -244,3 +244,48 @@ def fetch_face_image(image_index: int) -> Response | tuple[str, int]:
     finally:
         if "client" in locals():
             client.close()
+
+
+@main.route("/fetch_image")
+def fetch_image() -> Response | tuple[str, int]:
+    """Fetch the latest CCTV image (used by the /cctv page)."""
+    try:
+        client = MongoClient(MONGO_HOST)
+        db = client[DATABASE_NAME]
+        collection = db[COLLECTION_NAME]
+
+        # Get the latest image by timestamp or _id
+        doc = collection.find_one(sort=[("_id", -1)])
+        if not doc:
+            return "No image found", 404
+
+        # If stored in S3
+        if doc.get("s3_file_url"):
+            s3_file_url = doc["s3_file_url"]
+            bucket_name = s3_file_url.split("//")[1].split(".")[0]
+            s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=AWS_ACCESS_KEY,
+                aws_secret_access_key=AWS_SECRET_KEY,
+            )
+            temp_file = "temp_cctv_image.jpg"
+            s3.download_file(bucket_name, s3_key, temp_file)
+            with open(temp_file, "rb") as f:
+                encoded_data = base64.b64encode(f.read()).decode("utf-8")
+            os.remove(temp_file)
+            return encoded_data
+
+        # If stored directly in MongoDB
+        if doc.get("data"):
+            encoded_data = base64.b64encode(doc["data"]).decode("utf-8")
+            return encoded_data
+
+        return "Image data not found", 404
+
+    except Exception as e:
+        logger.error("Error fetching CCTV image: %s", e)
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if "client" in locals():
+            client.close()
