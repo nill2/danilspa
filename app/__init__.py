@@ -16,8 +16,8 @@ def create_app() -> Flask:
     app = Flask(__name__, instance_relative_config=True)
     app.debug = True
 
-    # ✅ Make FTP_IP available to templates
-    app.config["FTP_IP"] = os.getenv("FTP_IP")
+    # ✅ Make FTP_DOMAIN available to templates
+    app.config["FTP_DOMAIN"] = os.getenv("FTP_DOMAIN")
 
     # ✅ Register blueprints
     app.register_blueprint(main_blueprint)

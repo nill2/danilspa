@@ -1,10 +1,10 @@
 """
-Module Name: main.py.
+Module Name: main.py
 
 Description:
     Flask Blueprint defining routes for the personal page, CCTV, and face recognition features.
     Integrates with MongoDB and AWS S3 for CCTV image storage and retrieval.
-    Machine Learning (face recognition) functionality now uses backend API calls via FTP_DOMAIN.
+    Machine Learning (face recognition) functionality calls the backend API through the unified HTTPS domain.
 """
 
 from __future__ import annotations
@@ -22,7 +22,6 @@ from pymongo.errors import ConnectionFailure
 from botocore.exceptions import ClientError
 from datetime import datetime
 from typing import Any
-import ipaddress
 
 # -------------------------------------------------------------------
 # Logging setup
@@ -47,31 +46,14 @@ if MONGO_HOST == "localhost":
     except subprocess.CalledProcessError:
         logger.warning("Falling back to localhost for MONGO_HOST")
 
-FTP_DOMAIN = os.getenv("FTP_DOMAIN", "127.0.0.1")
+# ✅ Always use HTTPS and domain (no ports)
+FTP_DOMAIN = os.getenv("FTP_DOMAIN", "nill2.duckdns.org")
+BACKEND_BASE_URL = f"https://{FTP_DOMAIN}"
+
 DATABASE_NAME = "nill-home"
 COLLECTION_NAME = "nill-home-photos"
 
-
-# Determine backend base URL
-def is_ip_address(host: str) -> bool:
-    """Check if host is a valid IP address."""
-    try:
-        ipaddress.ip_address(host)
-        return True
-    except ValueError:
-        return False
-
-
-IS_PRODUCTION = os.getenv("RENDER", "false").lower() == "true"
-
-if is_ip_address(FTP_DOMAIN):
-    BACKEND_BASE_URL = f"http://{FTP_DOMAIN}:8001"
-else:
-    BACKEND_BASE_URL = (
-        f"https://{FTP_DOMAIN}" if IS_PRODUCTION else f"http://{FTP_DOMAIN}:8001"
-    )
-
-logger.info("Using backend base URL: %s", BACKEND_BASE_URL)
+logger.info("Using unified backend base URL: %s", BACKEND_BASE_URL)
 
 
 # -------------------------------------------------------------------
@@ -170,7 +152,7 @@ def faces() -> Response | tuple[str, int]:
 @main.route("/ml-known")
 def ml_known() -> str:
     """Render ML known faces search page."""
-    return render_template("ml_known.html")
+    return render_template("ml_known.html", FTP_DOMAIN=FTP_DOMAIN)
 
 
 @main.route("/api/ml/known-faces", methods=["GET"])
@@ -258,44 +240,6 @@ def fetch_face_image(image_index: int) -> Response | tuple[str, int]:
         return Response(json.dumps(response_data), mimetype="application/json")
     except Exception as e:
         logger.error("Error fetching face image: %s", e)
-        return "Error fetching image", 500
-    finally:
-        if "client" in locals():
-            client.close()
-
-
-@main.route("/fetch_image")
-def fetch_image() -> Response | tuple[str, int]:
-    """Fetch the latest CCTV image."""
-    try:
-        client = MongoClient(MONGO_HOST)
-        db = client[DATABASE_NAME]
-        collection = db[COLLECTION_NAME]
-        last_picture = collection.find_one(sort=[("_id", -1)])
-
-        if not last_picture:
-            return "No picture found", 404
-
-        if last_picture.get("s3_file_url"):
-            s3_url = last_picture["s3_file_url"]
-            bucket_name = s3_url.split("//")[1].split(".")[0]
-            s3_key = s3_url.split(bucket_name + ".s3.amazonaws.com/")[1]
-            s3 = boto3.client(
-                "s3",
-                aws_access_key_id=AWS_ACCESS_KEY,
-                aws_secret_access_key=AWS_SECRET_KEY,
-            )
-            temp_file = "temp_image.jpg"
-            s3.download_file(bucket_name, s3_key, temp_file)
-            with open(temp_file, "rb") as f:
-                encoded_data = base64.b64encode(f.read()).decode("utf-8")
-            os.remove(temp_file)
-        else:
-            encoded_data = base64.b64encode(last_picture["data"]).decode("utf-8")
-
-        return Response(encoded_data, mimetype="text/plain")
-    except Exception as e:
-        logger.error("Error fetching latest CCTV image: %s", e)
         return "Error fetching image", 500
     finally:
         if "client" in locals():

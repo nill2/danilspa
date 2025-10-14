@@ -16,7 +16,12 @@
 <div id="resultsContainer" class="row"></div>
 
 <script>
-const backendBase = "http://{{ ftp_ip }}:8001";
+// ✅ Use HTTPS automatically when the page is served via HTTPS
+const FTP_DOMAIN = "{{ FTP_DOMAIN | default('132.226.193.223') }}";
+const backendBase =
+  window.location.protocol === "https:"
+    ? `https://${FTP_DOMAIN}`
+    : `http://${FTP_DOMAIN}:8001`;
 
 /**
  * Load all known faces and display them with checkboxes.
