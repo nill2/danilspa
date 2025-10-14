@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 # ✅ Show environment variable values for verification
 ftp_ip = os.getenv("FTP_IP")
+ftp_domain = os.getenv("FTP_DOMAIN")
 mongo_uri = os.getenv("MONGO_URI")
 
 logger.info("🚀 Starting Flask app with environment variables:")

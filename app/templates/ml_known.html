@@ -27,13 +27,8 @@
 <p id="noResults" class="text-danger text-center" style="display:none;">No photos found.</p>
 
 <script>
-const FTP_DOMAIN = "{{ FTP_DOMAIN | default('132.226.193.223') }}";
-
-// ✅ Automatically switch between HTTP/HTTPS based on page protocol
-const API_BASE =
-  window.location.protocol === "https:"
-    ? `https://${FTP_DOMAIN}`
-    : `http://${FTP_DOMAIN}:8001`;
+const FTP_DOMAIN = "{{ FTP_DOMAIN | default('nill2.duckdns.org') }}";
+const API_BASE = `https://${FTP_DOMAIN}`;  // ✅ Always HTTPS + domain
 
 let results = [];
 let currentIndex = 0;
@@ -42,8 +37,6 @@ async function loadFaces() {
   try {
     const response = await fetch(`${API_BASE}/saved_known_faces`);
     const data = await response.json();
-
-    console.log("Loaded faces:", data);
 
     const container = document.getElementById("facesContainer");
     container.innerHTML = "";
@@ -82,14 +75,12 @@ async function loadFaces() {
 async function searchPhotos() {
   const selectedNames = Array.from(
     document.querySelectorAll("input[name='selected_faces']:checked")
-  ).map((cb) => cb.dataset.name);
+  ).map(cb => cb.dataset.name);
 
   const isKnownSearch = selectedNames.length > 0;
   const endpoint = isKnownSearch
     ? `${API_BASE}/faces/known`
     : `${API_BASE}/faces/unknown`;
-
-  console.log("Searching via", endpoint, "with names:", selectedNames);
 
   try {
     const response = await fetch(endpoint, {
@@ -98,21 +89,17 @@ async function searchPhotos() {
       body: isKnownSearch ? JSON.stringify(selectedNames) : null,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    results = data.results || [];
 
+    results = data.results || [];
     const noResults = document.getElementById("noResults");
     const resultsSection = document.getElementById("resultsSection");
-    const photoDisplay = document.getElementById("photoDisplay");
 
     noResults.style.display = results.length === 0 ? "block" : "none";
     resultsSection.style.display = results.length > 0 ? "block" : "none";
-    if (results.length === 0) return;
 
+    if (results.length === 0) return;
     currentIndex = 0;
     showPhoto();
   } catch (err) {
@@ -130,14 +117,8 @@ function showPhoto() {
   const date = photo.date || "Unknown";
   const filename = photo.filename || "N/A";
 
-  // ✅ Encode filename properly for special characters
   const safeFilename = encodeURIComponent(filename);
-
-  // ✅ Use HTTPS if frontend runs on Render
-  const protocol = window.location.protocol === "https:" ? "https" : "http";
-  const imgSrc = `${protocol}://${FTP_DOMAIN}:8001/face_image/${safeFilename}`;
-
-  console.log("Displaying photo:", imgSrc);
+  const imgSrc = `${API_BASE}/face_image/${safeFilename}`;
 
   const photoDisplay = document.getElementById("photoDisplay");
   photoDisplay.src = imgSrc;
@@ -147,10 +128,8 @@ function showPhoto() {
   document.getElementById("photoMeta").innerText = `📅 Date: ${date} | 👤 Persons: ${persons}`;
   document.getElementById("photoFilename").innerText = `🗂️ File: ${filename}`;
 
-  document.getElementById("prevBtn").style.display =
-    currentIndex > 0 ? "inline-block" : "none";
-  document.getElementById("nextBtn").style.display =
-    currentIndex < results.length - 1 ? "inline-block" : "none";
+  document.getElementById("prevBtn").style.display = currentIndex > 0 ? "inline-block" : "none";
+  document.getElementById("nextBtn").style.display = currentIndex < results.length - 1 ? "inline-block" : "none";
 }
 
 document.getElementById("prevBtn").onclick = () => {
