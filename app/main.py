@@ -4,7 +4,7 @@ Module Name: main.py.
 Description:
     Flask Blueprint defining routes for the personal page, CCTV, and face recognition features.
     Integrates with MongoDB and AWS S3 for CCTV image storage and retrieval.
-    Machine Learning (face recognition) functionality now uses backend API calls via FTP_IP.
+    Machine Learning (face recognition) functionality now uses backend API calls via FTP_DOMAIN.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ if MONGO_HOST == "localhost":
     except subprocess.CalledProcessError:
         logger.warning("Falling back to localhost for MONGO_HOST")
 
-FTP_IP = os.getenv("FTP_IP", "127.0.0.1")
+FTP_DOMAIN = os.getenv("FTP_DOMAIN", "127.0.0.1")
 DATABASE_NAME = "nill-home"
 COLLECTION_NAME = "nill-home-photos"
 
@@ -64,10 +64,12 @@ def is_ip_address(host: str) -> bool:
 
 IS_PRODUCTION = os.getenv("RENDER", "false").lower() == "true"
 
-if is_ip_address(FTP_IP):
-    BACKEND_BASE_URL = f"http://{FTP_IP}:8001"
+if is_ip_address(FTP_DOMAIN):
+    BACKEND_BASE_URL = f"http://{FTP_DOMAIN}:8001"
 else:
-    BACKEND_BASE_URL = f"https://{FTP_IP}" if IS_PRODUCTION else f"http://{FTP_IP}:8001"
+    BACKEND_BASE_URL = (
+        f"https://{FTP_DOMAIN}" if IS_PRODUCTION else f"http://{FTP_DOMAIN}:8001"
+    )
 
 logger.info("Using backend base URL: %s", BACKEND_BASE_URL)
 
