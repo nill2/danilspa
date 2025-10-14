@@ -1,6 +1,4 @@
 name: Python application
-#description: 'Check commits with linters, unit and e2e tests'
-
 on:
   push:
     branches:
@@ -17,9 +15,8 @@ jobs:
         version: [1]
 
     steps:
-      - name: defauld directory
-        run: |
-          echo "CurrentDirectory=$(pwd)" >> $GITHUB_ENV
+      - name: Default directory
+        run: echo "CurrentDirectory=$(pwd)" >> $GITHUB_ENV
 
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -32,11 +29,10 @@ jobs:
       - name: Set up packages
         uses: nill2/gha/install-packages@main
 
-      - name: Test unit tests with pytest
-        run: |
-          pytest  './tests/test_unit.py'
+      - name: Run unit tests
+        run: pytest './tests/test_unit.py'
 
       - name: Run linting (flake8 + pylint)
         run: |
-          flake8 app tests
-          pylint app tests || true  # non-fatal warnings for CI
+          flake8 app tests --max-line-length=120
+          pylint --rcfile=.pylintrc app tests || true
