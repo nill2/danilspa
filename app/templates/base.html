@@ -4,65 +4,80 @@
     {% block head %}
     <title>Danil Kabanov personal page</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='images/DanilKabanov_ss.jpg') }}" />
+    <link rel="shortcut icon" type="image/x-icon"
+          href="{{ url_for('static', filename='images/DanilKabanov_ss.jpg') }}" />
     <link href="https://fonts.googleapis.com/css2?family=Arvo&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='beauty.css') }}" />
 
-    <!-- ✅ Bootstrap 4 -->
-    <link rel="stylesheet"
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-          crossorigin="anonymous" />
-
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-            integrity="sha384-KJ3oDKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-            crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-            crossorigin="anonymous"></script>
+    <!-- ✅ Bootstrap 5 (no jQuery needed) -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous"
+    />
     {% endblock %}
 </head>
-<body>
-    <!-- ✅ Fixed navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand font-weight-bold" href="{{ url_for('main.index') }}">
-            Danil Kabanov
-        </a>
+<body data-bs-theme="light">
+    <!-- ✅ Sticky responsive navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">
+                Danil Kabanov
+            </a>
 
-        <!-- Hamburger menu -->
-        <button class="navbar-toggler" type="button"
-                data-toggle="collapse" data-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false"
-                aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <!-- ✅ Hamburger -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <!-- Navbar links -->
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.index') }}">About me</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.cctv') }}">Our home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.faces') }}">Faces</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-success font-weight-bold" href="{{ url_for('main.ml_known') }}">
-                        Known Faces Search
-                    </a>
-                </li>
-            </ul>
+            <!-- ✅ Navbar links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">About me</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.cctv') }}">Our home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.faces') }}">Faces</a></li>
+                    <li class="nav-item"><a class="nav-link text-success fw-bold" href="{{ url_for('main.ml_known') }}">Known Faces Search</a></li>
+                </ul>
+
+                <!-- 🌙 Dark mode toggle -->
+                <button id="themeToggle" class="btn btn-outline-secondary ms-3" title="Toggle dark mode">
+                    🌙
+                </button>
+            </div>
         </div>
     </nav>
 
     <div class="container mt-4 mb-5">
         {% block content %}{% endblock %}
     </div>
+
+    <!-- ✅ Bootstrap 5 bundle -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- 🌙 Dark mode script -->
+    <script>
+        const body = document.body;
+        const themeToggle = document.getElementById("themeToggle");
+
+        // Load saved theme
+        if (localStorage.getItem("theme") === "dark") {
+            body.dataset.bsTheme = "dark";
+            themeToggle.textContent = "☀️";
+        }
+
+        themeToggle.addEventListener("click", () => {
+            const isDark = body.dataset.bsTheme === "dark";
+            body.dataset.bsTheme = isDark ? "light" : "dark";
+            themeToggle.textContent = isDark ? "🌙" : "☀️";
+            localStorage.setItem("theme", isDark ? "light" : "dark");
+        });
+    </script>
 </body>
 </html>

@@ -2,25 +2,24 @@
     font-family: "Arial", sans-serif;
 }
 
-/* ✅ Ensure navbar toggler icon always visible */
-.navbar-light .navbar-toggler-icon {
-    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%280, 0, 0, 0.5%29' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* ✅ Improve navbar link appearance */
-.navbar-nav .nav-link {
-    margin: 4px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    transition: background-color 0.2s ease-in-out;
+/* Optional: custom dark theme tweaks */
+[data-bs-theme="dark"] {
+    background-color: #121212;
+    color: #e0e0e0;
 }
 
-.navbar-nav .nav-link:hover {
-    background-color: #f1f1f1;
-    text-decoration: none;
+[data-bs-theme="dark"] .navbar {
+    background-color: #1e1e1e !important;
 }
 
-/* ✅ Optional spacing fix for mobile */
-.navbar-nav {
-    text-align: center;
+[data-bs-theme="dark"] .nav-link {
+    color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .nav-link:hover {
+    color: #fff !important;
 }
