@@ -64,3 +64,18 @@ repos:
       - id: prettier
         args: ["--write"]
         files: \.(json|md|yml|yaml)$
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.3.9
+    hooks:
+      - id: pylint
+        args:
+          - "--output-format=colorized"
+          - "--rcfile=.pylintrc"
+          - "--disable=raw-checker-failed,bad-inline-option,locally-disabled,file-ignored,suppressed-message,useless-suppression,deprecated-pragma,use-symbolic-message-instead,E1101"
+        files: \.py$
+        exclude: ^\.cache
+        fail_fast: false
+        additional_dependencies:
+          - astroid>=3.3.3
+          - setuptools<81

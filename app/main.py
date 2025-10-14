@@ -22,6 +22,7 @@ from pymongo.errors import ConnectionFailure
 from botocore.exceptions import ClientError
 from datetime import datetime
 from typing import Any
+import ipaddress
 
 # -------------------------------------------------------------------
 # Logging setup
@@ -50,9 +51,24 @@ FTP_IP = os.getenv("FTP_IP", "127.0.0.1")
 DATABASE_NAME = "nill-home"
 COLLECTION_NAME = "nill-home-photos"
 
-# Auto-detect environment and build backend URL
+
+# Determine backend base URL
+def is_ip_address(host: str) -> bool:
+    """Check if host is a valid IP address."""
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        return False
+
+
 IS_PRODUCTION = os.getenv("RENDER", "false").lower() == "true"
-BACKEND_BASE_URL = f"https://{FTP_IP}" if IS_PRODUCTION else f"http://{FTP_IP}:8001"
+
+if is_ip_address(FTP_IP):
+    BACKEND_BASE_URL = f"http://{FTP_IP}:8001"
+else:
+    BACKEND_BASE_URL = f"https://{FTP_IP}" if IS_PRODUCTION else f"http://{FTP_IP}:8001"
+
 logger.info("Using backend base URL: %s", BACKEND_BASE_URL)
 
 
