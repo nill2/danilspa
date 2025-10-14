@@ -1,17 +1,15 @@
-h1,
-h2,
-h4,
-p {
-    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-    margin: 0;
-    padding: 0;
-    line-height: 1.5;
-    font-size: 1em;
-    font-weight: normal;
+/* === Base Typography === */
+h1, h2, h3, h4, p {
+    font-family: Cambria, Georgia, serif;
     color: #000;
-    background-color: transparent;
+    line-height: 1.5;
 }
 
-#intro {
-    padding: 5px;
+/* === Dark Mode Fixes for Extended File === */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode p {
+    color: #eaeaea !important;
 }

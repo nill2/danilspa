@@ -1,25 +1,67 @@
-* {
-    font-family: "Arial", sans-serif;
-}
-
+/* 🌙 DARK MODE FIXES AND GENERAL BASE STYLING */
 body {
-    transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: "Arvo", serif;
+    background-color: #f9f9f9;
+    color: #222;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-/* Optional: custom dark theme tweaks */
-[data-bs-theme="dark"] {
-    background-color: #121212;
-    color: #e0e0e0;
+/* ✅ Text stays readable in both modes */
+p, h1, h2, h3, h4, h5, h6, li, a, span, strong, b {
+    transition: color 0.3s;
 }
 
-[data-bs-theme="dark"] .navbar {
+/* 🌙 Dark Mode Styling */
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #eaeaea !important;
+}
+
+/* Ensure all text elements go light */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6,
+body.dark-mode p,
+body.dark-mode li,
+body.dark-mode a,
+body.dark-mode b,
+body.dark-mode strong,
+body.dark-mode span {
+    color: #eaeaea !important;
+}
+
+/* Navbar and links */
+body.dark-mode .navbar {
+    background-color: #1f1f1f !important;
+    border-bottom: 1px solid #333;
+}
+
+body.dark-mode .navbar .nav-link {
+    color: #eaeaea !important;
+}
+
+body.dark-mode .navbar .nav-link:hover {
+    color: #80bfff !important;
+}
+
+body.dark-mode a {
+    color: #80bfff !important;
+}
+
+/* Optional: dark mode cards and buttons */
+body.dark-mode .card {
     background-color: #1e1e1e !important;
+    color: #eaeaea !important;
 }
 
-[data-bs-theme="dark"] .nav-link {
-    color: #e0e0e0 !important;
+body.dark-mode .btn-outline-secondary {
+    border-color: #aaa !important;
+    color: #eaeaea !important;
 }
 
-[data-bs-theme="dark"] .nav-link:hover {
-    color: #fff !important;
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #333 !important;
 }
