@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">Known Faces Search</h2>
+
+<div class="controls mb-3">
+  <button class="btn btn-primary me-2" onclick="loadKnownFaces()">Load Known Faces</button>
+  <button class="btn btn-success" onclick="searchSelectedFaces()">Search Selected Faces</button>
+</div>
+
+<div id="knownFacesContainer" class="row"></div>
+
+<hr>
+
+<h4>Search Results</h4>
+<div id="resultsContainer" class="row"></div>
+
+<script>
+const backendBase = "http://{{ ftp_ip }}:8001";
+
+/**
+ * Load all known faces and display them with checkboxes.
+ */
+async function loadKnownFaces() {
+  const container = document.getElementById("knownFacesContainer");
+  container.innerHTML = "<p>Loading known faces...</p>";
+
+  try {
+    const res = await fetch(`${backendBase}/saved_known_faces`);
+    const data = await res.json();
+
+    if (!data.results || data.results.length === 0) {
+      container.innerHTML = "<p class='text-muted'>No known faces found.</p>";
+      return;
+    }
+
+    container.innerHTML = "";
+    data.results.forEach((item, idx) => {
+      const name = item.name || "Unknown";
+      const imgUrl = `${backendBase}/known_face_image/${encodeURIComponent(name)}`;
+
+      const col = document.createElement("div");
+      col.className = "col-md-3 col-sm-4 mb-4";
+      col.innerHTML = `
+        <div class="card shadow-sm">
+          <img src="${imgUrl}" class="card-img-top" alt="${name}"
+               onerror="this.src='/static/no-image.png'">
+          <div class="card-body text-center">
+            <h6 class="card-title">${name}</h6>
+            <input type="checkbox" id="face_${idx}" name="known_face" value="${name}">
+          </div>
+        </div>
+      `;
+      container.appendChild(col);
+    });
+  } catch (err) {
+    console.error("Error loading known faces:", err);
+    container.innerHTML = "<p class='text-danger'>Failed to load known faces.</p>";
+  }
+}
+
+/**
+ * Search for photos containing the selected known faces.
+ */
+async function searchSelectedFaces() {
+  const selected = Array.from(document.querySelectorAll('input[name="known_face"]:checked'))
+                        .map(el => el.value);
+
+  if (selected.length === 0) {
+    alert("Please select at least one known face.");
+    return;
+  }
+
+  const resultsContainer = document.getElementById("resultsContainer");
+  resultsContainer.innerHTML = "<p>Searching...</p>";
+
+  try {
+    const res = await fetch(`${backendBase}/faces/known`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(selected),
+    });
+    const data = await res.json();
+
+    if (!data.results || data.results.length === 0) {
+      resultsContainer.innerHTML = "<p class='text-muted'>No matches found.</p>";
+      return;
+    }
+
+    resultsContainer.innerHTML = "";
+    data.results.forEach(photo => {
+      const filename = photo.filename || "unknown";
+      const imgUrl = `${backendBase}/photo_image/${encodeURIComponent(filename)}`;
+      const persons = (photo.matched_persons || []).join(", ") || "N/A";
+
+      const col = document.createElement("div");
+      col.className = "col-md-3 col-sm-4 mb-4";
+      col.innerHTML = `
+        <div class="card shadow-sm">
+          <img src="${imgUrl}" class="card-img-top" alt="${filename}"
+               onerror="this.src='/static/no-image.png'">
+          <div class="card-body text-center">
+            <p class="card-text">${filename}</p>
+            <small class="text-muted">Persons: ${persons}</small>
+          </div>
+        </div>
+      `;
+      resultsContainer.appendChild(col);
+    });
+  } catch (err) {
+    console.error("Error searching faces:", err);
+    resultsContainer.innerHTML = "<p class='text-danger'>Search failed.</p>";
+  }
+}
+</script>
+
+<style>
+.card {
+  border-radius: 12px;
+}
+.card-img-top {
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+</style>
+
+{% endblock %}

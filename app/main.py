@@ -2,318 +2,279 @@
 Module Name: main.py.
 
 Description:
-    This module defines routes and functions for a Flask application
-    that interacts with MongoDB to display images.
+    Flask Blueprint defining routes for the personal page, CCTV, and face recognition features.
+    Integrates with MongoDB and AWS S3 for CCTV image storage and retrieval.
+    Machine Learning (face recognition) functionality now uses backend API calls via FTP_IP.
 """
+
+from __future__ import annotations
 
 import base64
 import os
 import subprocess
 import logging
 import boto3
-from flask import Blueprint, render_template, Response
+import json
+import requests
+from flask import Blueprint, render_template, Response, jsonify, request
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from botocore.exceptions import ClientError
 from datetime import datetime
-import json
+from typing import Any
 
-
-# Configure the logger (optional)
+# -------------------------------------------------------------------
+# Logging setup
+# -------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-
-# Define the logger
 logger = logging.getLogger(__name__)
 
 main = Blueprint("main", __name__)
 
-# MongoDB connection string
-MONGO_HOST = "localhost"
-if "MONGO_HOST" in os.environ:
-    MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
-    print("Getting from env vars" + MONGO_HOST)
-else:
+# -------------------------------------------------------------------
+# Configuration
+# -------------------------------------------------------------------
+MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
+if MONGO_HOST == "localhost":
     try:
-        # Run the vlt command and capture its output
-        VLT_COMMAND = "vlt secrets get --plaintext MONGO_HOST"
-        MONGO_HOST = subprocess.check_output(VLT_COMMAND, shell=True, text=True)
-        print("Value from hashicorp for MONGO_HOST: " + str(MONGO_HOST))
-    except subprocess.CalledProcessError as hashi_e:
-        # Handle errors, e.g., if the secret does not exist
-        print(f"Error: {hashi_e}")
+        MONGO_HOST = subprocess.check_output(
+            "vlt secrets get --plaintext MONGO_HOST", shell=True, text=True
+        ).strip()
+        logger.info("Loaded MONGO_HOST from Vault: %s", MONGO_HOST)
+    except subprocess.CalledProcessError:
+        logger.warning("Falling back to localhost for MONGO_HOST")
 
-# MongoDB database name
+FTP_IP = os.getenv("FTP_IP", "127.0.0.1")
 DATABASE_NAME = "nill-home"
-# MongoDB collection name where the pictures are stored
 COLLECTION_NAME = "nill-home-photos"
 
 
-AWS_ACCESS_KEY = None
-if "AWS_ACCESS_KEY" in os.environ:
-    AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY", None)
-    # print("Getting AWS_ACCESS_KEY from env vars: " + (AWS_ACCESS_KEY or "None"))
-else:
+# -------------------------------------------------------------------
+# AWS configuration
+# -------------------------------------------------------------------
+def get_secret_from_vault_or_env(var_name: str) -> str | None:
+    """Retrieve secret value either from environment or Vault."""
+    value = os.getenv(var_name)
+    if value:
+        return value
     try:
-        # Run the vlt command and capture its output
-        VLT_COMMAND = "vlt secrets get --plaintext AWS_ACCESS_KEY"
-        AWS_ACCESS_KEY = subprocess.check_output(VLT_COMMAND, shell=True, text=True)
-        # print("Value from hashicorp for MONGO_HOST: " + str(AWS_ACCESS_KEY))
-    except subprocess.CalledProcessError as hashi_e:
-        # Handle errors, e.g., if the secret does not exist
-        print(f"Error: {hashi_e}")
+        return subprocess.check_output(
+            f"vlt secrets get --plaintext {var_name}", shell=True, text=True
+        ).strip()
+    except subprocess.CalledProcessError:
+        logger.warning(f"Failed to get {var_name} from Vault")
+        return None
 
-AWS_SECRET_KEY = None
-if "AWS_SECRET_KEY" in os.environ:
-    AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY", None)
-    # print("Getting AWS_SECRET_KEY from env vars: " + AWS_SECRET_KEY)
-else:
-    try:
-        # Run the vlt command and capture its output
-        VLT_COMMAND = "vlt secrets get --plaintext AWS_SECRET_KEY"
-        AWS_SECRET_KEY = subprocess.check_output(VLT_COMMAND, shell=True, text=True)
-        # print("Value from hashicorp for MONGO_HOST: " + str(AWS_SECRET_KEY))
-    except subprocess.CalledProcessError as hashi_e:
-        # Handle errors, e.g., if the secret does not exist
-        print(f"Error: {hashi_e}")
 
+AWS_ACCESS_KEY = get_secret_from_vault_or_env("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = get_secret_from_vault_or_env("AWS_SECRET_KEY")
 AWS_BUCKET_NAME = "nill-home-photos"
 
 
+# -------------------------------------------------------------------
+# Utility functions
+# -------------------------------------------------------------------
 def delete_s3_file(s3_file_url: str) -> None:
-    """
-    Delete a file from an S3 bucket based on its URL.
-
-    Args:
-        s3_file_url (str): The URL of the file in the S3 bucket.
-    """
+    """Delete a file from an S3 bucket based on its URL."""
     try:
-        # Extract bucket name and key from the S3 file URL
         bucket_name = s3_file_url.split("//")[1].split(".")[0]
         s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
-
-        # Create an S3 client
         s3 = boto3.client(
-            "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
+            "s3",
+            aws_access_key_id=AWS_ACCESS_KEY,
+            aws_secret_access_key=AWS_SECRET_KEY,
         )
-
-        # Delete the file from the S3 bucket
         s3.delete_object(Bucket=bucket_name, Key=s3_key)
         logger.info("Deleted file from S3: %s", s3_file_url)
     except ClientError as e:
         logger.error("Error deleting file from S3: %s", e)
 
 
-@main.route("/")  # type: ignore
-def index() -> Response:
-    """Define a default page."""
+# -------------------------------------------------------------------
+# Routes
+# -------------------------------------------------------------------
+@main.route("/")
+def index() -> str:
+    """Render home (about me) page."""
     return render_template("index.html")
 
 
-@main.route("/profile")  # type: ignore
-def profile() -> Response:
-    """Use a stub so far."""
+@main.route("/profile")
+def profile() -> str:
+    """Render profile page."""
     return render_template("profile.html")
 
 
-@main.route("/cctv")  # type: ignore
-def cctv() -> Response:
-    """Define the main.cctv endpoint."""
+@main.route("/cctv")
+def cctv() -> str:
+    """Render CCTV page."""
     return render_template("cctv.html")
 
 
-@main.route("/faces")  # type: ignore
-def faces() -> Response:
-    """Use the page to display images from the faces collection with their dates."""
+@main.route("/faces")
+def faces() -> Response | tuple[str, int]:
+    """Display list of known faces with timestamps."""
     try:
-        # Connect to MongoDB
         client = MongoClient(MONGO_HOST)
         db = client[DATABASE_NAME]
         collection = db["nill-home-faces"]
 
-        # Fetch all documents and include the `bsonTime` along with image data
-        images_with_dates = []
-        for doc in collection.find().sort("_id", -1):  # Sort by `_id` descending
-            image_data = {
-                "image_id": str(doc["filename"]),  # Use _id as a unique identifier
+        images_with_dates = [
+            {
+                "image_id": str(doc.get("filename", "")),
                 "bsonTime": doc.get("bsonTime", "Unknown"),
             }
-            images_with_dates.append(image_data)
+            for doc in collection.find().sort("_id", -1)
+        ]
 
-        logger.info(
-            f"Fetched {len(images_with_dates)} images with dates for faces page."
-        )
         return render_template("faces.html", images_with_dates=images_with_dates)
     except ConnectionFailure as e:
-        logger.error(f"Error connecting to MongoDB: {e}")
-        return "Error loading faces page", 500
+        logger.error("MongoDB connection failed: %s", e)
+        return "Database error", 500
     except Exception as e:
-        logger.error(f"Unexpected error loading faces page: {e}")
-        return "Unexpected error occurred", 500
+        logger.error("Unexpected error in /faces: %s", e)
+        return "Unexpected error", 500
     finally:
-        if "client" in locals() and client:
+        if "client" in locals():
             client.close()
 
 
-@main.route("/fetch_face_image/<int:image_index>")  # type: ignore
-def fetch_face_image(image_index: int) -> Response:  # noqa
-    """Fetch an image data from MongoDB (nill-home-faces collection) by index."""
+# -------------------------------------------------------------------
+# ML (Backend API Proxies)
+# -------------------------------------------------------------------
+@main.route("/ml-known")
+def ml_known() -> str:
+    """Render ML known faces search page."""
+    return render_template("ml_known.html")
+
+
+@main.route("/api/ml/known-faces", methods=["GET"])
+def api_ml_known_faces() -> Response:
+    """Get list of known face names from backend API."""
     try:
-        # Connect to MongoDB
+        response = requests.get(f"http://{FTP_IP}:8001/faces/known_names", timeout=15)
+        return Response(
+            response.content, status=response.status_code, mimetype="application/json"
+        )
+    except Exception as e:
+        logger.error("Error fetching known faces: %s", e)
+        return jsonify({"error": "Failed to fetch known faces"}), 500
+
+
+@main.route("/api/ml/search", methods=["POST"])
+def api_ml_search() -> Response:
+    """Proxy search for known or unknown faces via backend API."""
+    selected = request.json or []
+    base_url = f"http://{FTP_IP}:8001"
+
+    try:
+        if not selected:
+            response = requests.get(f"{base_url}/faces/unknown", timeout=15)
+        else:
+            response = requests.post(
+                f"{base_url}/faces/known",
+                json=selected,
+                headers={"Content-Type": "application/json"},
+                timeout=15,
+            )
+        return Response(
+            response.content, status=response.status_code, mimetype="application/json"
+        )
+    except Exception as e:
+        logger.error("Error calling backend ML API: %s", e)
+        return jsonify({"error": "Backend API call failed"}), 500
+
+
+# -------------------------------------------------------------------
+# Fetch images (used by CCTV and Faces pages)
+# -------------------------------------------------------------------
+@main.route("/fetch_face_image/<int:image_index>")
+def fetch_face_image(image_index: int) -> Response | tuple[str, int]:
+    """Fetch a face image by index from MongoDB or S3."""
+    try:
         client = MongoClient(MONGO_HOST)
         db = client[DATABASE_NAME]
         collection = db["nill-home-faces"]
+        images = list(collection.find().sort("_id", -1))
 
-        # Fetch and validate image list
-        images = list(collection.find().sort("_id", -1))  # Sort by `_id` descending
-        logger.info(f"Number of images fetched from MongoDB: {len(images)}")
-        if not images:
-            logger.error("No images found in the collection.")
-            return "No images found", 404
-
-        # Validate index
-        logger.info(f"Requested image index: {image_index}")
         if not (0 <= image_index < len(images)):
-            logger.error(
-                f"Invalid image index: {image_index}. Must be between 0 and {len(images) - 1}."
-            )
             return "Invalid image index", 404
 
-        # Fetch the document at the given index
-        image_doc = images[image_index]
-        # logger.info(f"Fetched document: {image_doc}")
-
-        # Prepare response data
-        bson_time = image_doc.get("bsonTime")
-        logger.info(f"bsonTime field value: {bson_time}")
-        logger.info(f"bsonTime type: {type(bson_time)}")
-        response_data = {
-            "imageId": str(image_doc["filename"]),
-            # Convert bsonTime (datetime) to string if it's a datetime object
+        doc = images[image_index]
+        response_data: dict[str, Any] = {
+            "imageId": str(doc.get("filename", "")),
             "bsonTime": (
-                bson_time.strftime("%Y-%m-%d %H:%M:%S")
-                if isinstance(bson_time, datetime)
+                doc["bsonTime"].strftime("%Y-%m-%d %H:%M:%S")
+                if isinstance(doc.get("bsonTime"), datetime)
                 else "Unknown"
             ),
         }
 
-        # Check if `s3_file_url` exists and is valid
-        if "s3_file_url" in image_doc and image_doc["s3_file_url"]:
-            s3_file_url = image_doc["s3_file_url"]
-            logger.info(f"Fetching face image from S3: {s3_file_url}")
-            try:
-                bucket_name = s3_file_url.split("//")[1].split(".")[0]
-                s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
-                s3 = boto3.client(
-                    "s3",
-                    aws_access_key_id=AWS_ACCESS_KEY,
-                    aws_secret_access_key=AWS_SECRET_KEY,
-                )
-                local_temp_file_path = "temp_face_image.jpg"
-                s3.download_file(bucket_name, s3_key, local_temp_file_path)
-                with open(local_temp_file_path, "rb") as file:
-                    image_content = file.read()
-                os.remove(local_temp_file_path)
-                encoded_image_data = base64.b64encode(image_content).decode("utf-8")
-
-                # Include image data in the response
-                response_data["imageData"] = encoded_image_data
-                return Response(json.dumps(response_data), mimetype="application/json")
-            except ClientError as e:
-                logger.error(f"Error fetching image from S3: {e}")
-                return "Error fetching image from S3", 500
-        elif "data" in image_doc and image_doc["data"]:
-            # Get image from MongoDB's `data` field
-            logger.info("Fetching image from MongoDB data field.")
-            picture_data = image_doc["data"]
-            try:
-                encoded_picture_data = base64.b64encode(picture_data).decode("utf-8")
-
-                # Include image data in the response
-                response_data["imageData"] = encoded_picture_data
-                return Response(json.dumps(response_data), mimetype="application/json")
-            except Exception as e:
-                logger.error(f"Error encoding image data: {e}")
-                return "Error processing image data", 500
-        else:
-            logger.error(
-                f"Document at index {image_index} has no valid fields (s3_file_url or data)."
+        if doc.get("s3_file_url"):
+            s3_file_url = doc["s3_file_url"]
+            bucket_name = s3_file_url.split("//")[1].split(".")[0]
+            s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=AWS_ACCESS_KEY,
+                aws_secret_access_key=AWS_SECRET_KEY,
             )
+            temp_file = "temp_face_image.jpg"
+            s3.download_file(bucket_name, s3_key, temp_file)
+            with open(temp_file, "rb") as f:
+                encoded_data = base64.b64encode(f.read()).decode("utf-8")
+            os.remove(temp_file)
+            response_data["imageData"] = encoded_data
+        elif doc.get("data"):
+            encoded_data = base64.b64encode(doc["data"]).decode("utf-8")
+            response_data["imageData"] = encoded_data
+        else:
             return "Image data not found", 404
-    except Exception as e:  # pylint: disable=W0718
-        logger.error(f"Unexpected error fetching face image: {e}")
-        return "Unexpected error occurred", 500
+
+        return Response(json.dumps(response_data), mimetype="application/json")
+    except Exception as e:
+        logger.error("Error fetching face image: %s", e)
+        return "Error fetching image", 500
     finally:
-        if "client" in locals() and client:
+        if "client" in locals():
             client.close()
 
 
-@main.route("/fetch_image")  # type: ignore
-def fetch_image() -> Response:  # pylint: disable=R0914
-    """Fetch an image data from MongoDB and Image itself from S3."""
+@main.route("/fetch_image")
+def fetch_image() -> Response | tuple[str, int]:
+    """Fetch the latest CCTV image."""
     try:
-        # Connect to MongoDB
         client = MongoClient(MONGO_HOST)
         db = client[DATABASE_NAME]
         collection = db[COLLECTION_NAME]
-
-        # Get the last recorded picture document from the collection
         last_picture = collection.find_one(sort=[("_id", -1)])
-        if last_picture:
-            if last_picture.get("s3_file_url"):
-                # Extract the S3 file URL from the document
-                s3_file_url = last_picture["s3_file_url"]
-                logger.info("getting pic from S3: %s", s3_file_url)
-                try:
-                    # Extract bucket name and key from the S3 file URL
-                    bucket_name = s3_file_url.split("//")[1].split(".")[0]
-                    s3_key = s3_file_url.split(bucket_name + ".s3.amazonaws.com/")[1]
 
-                    # Create an S3 client
-                    s3 = boto3.client(
-                        "s3",
-                        aws_access_key_id=AWS_ACCESS_KEY,
-                        aws_secret_access_key=AWS_SECRET_KEY,
-                    )
+        if not last_picture:
+            return "No picture found", 404
 
-                    # Download the file from the S3 bucket to a temporary file
-                    local_temp_file_path = "temp_image.jpg"
-                    s3.download_file(bucket_name, s3_key, local_temp_file_path)
+        if last_picture.get("s3_file_url"):
+            s3_url = last_picture["s3_file_url"]
+            bucket_name = s3_url.split("//")[1].split(".")[0]
+            s3_key = s3_url.split(bucket_name + ".s3.amazonaws.com/")[1]
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=AWS_ACCESS_KEY,
+                aws_secret_access_key=AWS_SECRET_KEY,
+            )
+            temp_file = "temp_image.jpg"
+            s3.download_file(bucket_name, s3_key, temp_file)
+            with open(temp_file, "rb") as f:
+                encoded_data = base64.b64encode(f.read()).decode("utf-8")
+            os.remove(temp_file)
+        else:
+            encoded_data = base64.b64encode(last_picture["data"]).decode("utf-8")
 
-                    # Read the content of the downloaded file
-                    with open(local_temp_file_path, "rb") as file:
-                        image_content = file.read()
-
-                    # Encode the image content to Base64
-                    encoded_image_data = base64.b64encode(image_content).decode("utf-8")
-
-                    # Return the Base64 encoded image data
-                    response = Response(encoded_image_data, mimetype="text/plain")
-
-                    # After processing the image, delete the temporary file
-                    if os.path.exists(local_temp_file_path):
-                        os.remove(local_temp_file_path)
-                        print(f"Temporary file deleted: {local_temp_file_path}")
-
-                    return response
-                except ClientError as e:
-                    logger.error("Error downloading file from S3: %s", e)
-            else:
-                # Get the picture data from the 'data' field
-                logger.info("getting pic from from the data field from MongoDB")
-                picture_data = last_picture["data"]
-                # Encode the picture data to Base64
-                encoded_picture_data = base64.b64encode(picture_data).decode("utf-8")
-                response = Response(encoded_picture_data, mimetype="text/plain")
-                return response
-        return "Couldn't find a picture"
-    except ConnectionFailure as e:
-        return f"Error connecting to MongoDB: {e}"
-    except Exception as e:  # pylint: disable=W0718
-        logger.error("Error fetching image: %s", e)
-        return "Error fetching image"
+        return Response(encoded_data, mimetype="text/plain")
+    except Exception as e:
+        logger.error("Error fetching latest CCTV image: %s", e)
+        return "Error fetching image", 500
     finally:
-        # Close MongoDB connection
-        if client:
+        if "client" in locals():
             client.close()

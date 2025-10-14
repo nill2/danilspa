@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Known Faces Search</h2>
+
+<p class="text-muted">
+  Select faces to search — if none selected, strangers will be searched instead.
+</p>
+
+<div id="facesContainer" class="row mb-4"></div>
+
+<div class="text-center mb-4">
+  <button id="searchBtn" class="btn btn-primary">Search Photos</button>
+</div>
+
+<div id="resultsSection" class="text-center" style="display:none;">
+  <h4 id="resultInfo"></h4>
+  <p id="photoMeta" class="text-muted"></p>
+  <img id="photoDisplay" class="img-fluid rounded mb-2" style="max-height:400px; display:none;" />
+  <p id="photoFilename" class="text-secondary"></p>
+  <div>
+    <button id="prevBtn" class="btn btn-outline-secondary me-2" style="display:none;">Previous</button>
+    <button id="nextBtn" class="btn btn-outline-secondary" style="display:none;">Next</button>
+  </div>
+</div>
+
+<p id="noResults" class="text-danger text-center" style="display:none;">No photos found.</p>
+
+<script>
+const FTP_IP = "{{ FTP_IP | default('132.226.193.223') }}";
+const API_BASE = `http://${FTP_IP}:8001`;
+let results = [];
+let currentIndex = 0;
+
+async function loadFaces() {
+  try {
+    const response = await fetch(`${API_BASE}/saved_known_faces`);
+    const data = await response.json();
+
+    console.log("Loaded faces:", data);
+
+    const container = document.getElementById("facesContainer");
+    container.innerHTML = "";
+
+    if (!data.results || data.results.length === 0) {
+      container.innerHTML = "<p class='text-danger'>No known faces found.</p>";
+      return;
+    }
+
+    data.results.forEach((face, index) => {
+      const imgSrc = face.data
+        ? `data:image/jpeg;base64,${face.data}`
+        : `${API_BASE}/known_face_image/${encodeURIComponent(face.name)}`;
+
+      const faceCard = document.createElement("div");
+      faceCard.className = "col-md-3 mb-4";
+      faceCard.innerHTML = `
+        <div class="card h-100 text-center p-2">
+          <input type="checkbox" id="face_${index}" name="selected_faces" data-name="${face.name}" class="form-check-input mb-2 mt-1">
+          <label for="face_${index}" class="fw-bold d-block">${face.name || "Unknown"}</label>
+          ${
+            imgSrc
+              ? `<img src="${imgSrc}" class="img-fluid rounded mt-2" alt="${face.name}" />`
+              : `<div class="text-muted mt-2">No image</div>`
+          }
+        </div>
+      `;
+      container.appendChild(faceCard);
+    });
+  } catch (err) {
+    console.error("Error loading known faces:", err);
+    alert("Failed to load known faces.");
+  }
+}
+
+async function searchPhotos() {
+  const selectedNames = Array.from(
+    document.querySelectorAll("input[name='selected_faces']:checked")
+  ).map((cb) => cb.dataset.name);
+
+  const isKnownSearch = selectedNames.length > 0;
+  const endpoint = isKnownSearch
+    ? `${API_BASE}/faces/known`
+    : `${API_BASE}/faces/unknown`;
+
+  console.log("Searching via", endpoint, "with names:", selectedNames);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: isKnownSearch ? "POST" : "GET",
+      headers: { "Content-Type": "application/json" },
+      body: isKnownSearch ? JSON.stringify(selectedNames) : null,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    results = data.results || [];
+
+    const noResults = document.getElementById("noResults");
+    const resultsSection = document.getElementById("resultsSection");
+    const photoDisplay = document.getElementById("photoDisplay");
+
+    noResults.style.display = results.length === 0 ? "block" : "none";
+    resultsSection.style.display = results.length > 0 ? "block" : "none";
+    if (results.length === 0) return;
+
+    currentIndex = 0;
+    showPhoto();
+  } catch (err) {
+    console.error("Error during search:", err);
+    alert("Search failed.");
+  }
+}
+
+function showPhoto() {
+  const photo = results[currentIndex];
+  const persons =
+    (photo.known_persons && photo.known_persons.join(", ")) ||
+    (photo.persons && photo.persons.join(", ")) ||
+    "Unknown";
+  const date = photo.date || "Unknown";
+  const filename = photo.filename || "N/A";
+
+  // ✅ Encode filename properly for special characters
+  const safeFilename = encodeURIComponent(filename);
+
+  // ✅ Use HTTPS if frontend runs on Render
+  const protocol = window.location.protocol === "https:" ? "https" : "http";
+  const imgSrc = `${protocol}://${FTP_IP}:8001/face_image/${safeFilename}`;
+
+  console.log("Displaying photo:", imgSrc);
+
+  const photoDisplay = document.getElementById("photoDisplay");
+  photoDisplay.src = imgSrc;
+  photoDisplay.style.display = "block";
+
+  document.getElementById("resultInfo").innerText = `Photo ${currentIndex + 1} of ${results.length}`;
+  document.getElementById("photoMeta").innerText = `📅 Date: ${date} | 👤 Persons: ${persons}`;
+  document.getElementById("photoFilename").innerText = `🗂️ File: ${filename}`;
+
+  document.getElementById("prevBtn").style.display =
+    currentIndex > 0 ? "inline-block" : "none";
+  document.getElementById("nextBtn").style.display =
+    currentIndex < results.length - 1 ? "inline-block" : "none";
+}
+
+document.getElementById("prevBtn").onclick = () => {
+  if (currentIndex > 0) {
+    currentIndex--;
+    showPhoto();
+  }
+};
+
+document.getElementById("nextBtn").onclick = () => {
+  if (currentIndex < results.length - 1) {
+    currentIndex++;
+    showPhoto();
+  }
+};
+
+window.addEventListener("DOMContentLoaded", () => {
+  loadFaces();
+  document.getElementById("searchBtn").addEventListener("click", searchPhotos);
+});
+</script>
+{% endblock %}
