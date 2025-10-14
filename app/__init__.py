@@ -1,18 +1,25 @@
 """Initialize and configure the Flask application."""
 
 from flask import Flask
+from dotenv import load_dotenv
+import os
+
 from .main import main as main_blueprint
 from .auth import auth as auth_blueprint
 
 
-def create_app() -> Flask:  # test_config=None
+def create_app() -> Flask:
     """Create and configure the Flask application."""
-    app = Flask(__name__, instance_relative_config=True)
+    # ✅ Load environment variables
+    load_dotenv()
 
-    # Enable debugging mode
+    app = Flask(__name__, instance_relative_config=True)
     app.debug = True
 
-    # Register blueprints
+    # ✅ Make FTP_IP available to templates
+    app.config["FTP_IP"] = os.getenv("FTP_IP")
+
+    # ✅ Register blueprints
     app.register_blueprint(main_blueprint)
     app.register_blueprint(auth_blueprint)
 
