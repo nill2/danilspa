@@ -6,56 +6,69 @@
 {% endblock %}
 
 {% block content %}
-    <div class="center">
-        <h1>Faces</h1>
-        <img id="face-image" src="" width="640" height="480" alt="Face Image">
-        <div id="image-info">
-            <p>Image ID: <span id="image-id"></span></p>
-            <p>Upload Date: <span id="bsonTime"></span></p>
-        </div>
-        <div class="navigation-buttons">
-            <button id="prev-button" class="btn btn-secondary">Previous</button>
-            <button id="next-button" class="btn btn-secondary">Next</button>
-        </div>
+<div class="center">
+    <h1>Faces</h1>
+
+    <img id="face-image" src="" width="640" height="480" alt="Face">
+
+    <div id="image-info">
+        <p>Filename: <span id="filename"></span></p>
+        <p>Upload Date: <span id="bsonTime"></span></p>
     </div>
 
-    <script>
-        let currentIndex = 0;
+    <div class="navigation-buttons">
+        <button id="prev" class="btn btn-secondary">Previous</button>
+        <button id="next" class="btn btn-secondary">Next</button>
+    </div>
+</div>
 
-        function fetchFaceImage(index) {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        var response = JSON.parse(xhr.responseText);
-                        var image = document.getElementById('face-image');
-                        image.src = "data:image/jpeg;base64," + response.imageData;
+<script>
+let faces = [];
+let index = 0;
 
-                        // Update image info
-                        document.getElementById('image-id').textContent = response.imageId;
-                        document.getElementById('bsonTime').textContent = response.bsonTime;
-                    } else {
-                        console.error('Failed to fetch face image:', xhr.status, xhr.statusText);
-                    }
-                }
-            };
-            xhr.open('GET', '/fetch_face_image/' + index, true);
-            xhr.send();
+async function loadFaces() {
+    try {
+        const res = await fetch("https://nill2.duckdns.org/photos_detected_faces");
+        if (!res.ok) throw new Error("Failed to load faces metadata");
+
+        const data = await res.json();
+        faces = data.results || [];
+
+        if (faces.length === 0) {
+            console.error("No faces detected");
+            return;
         }
 
-        document.getElementById('prev-button').addEventListener('click', function() {
-            if (currentIndex > 0) {
-                currentIndex--;
-                fetchFaceImage(currentIndex);
-            }
-        });
+        display(index);
+    } catch (err) {
+        console.error(err);
+    }
+}
 
-        document.getElementById('next-button').addEventListener('click', function() {
-            currentIndex++;
-            fetchFaceImage(currentIndex);
-        });
+function display(i) {
+    const item = faces[i];
+    if (!item) return;
 
-        // Initial load
-        fetchFaceImage(currentIndex);
-    </script>
+    const filename = item.filename;
+    document.getElementById("filename").textContent = filename;
+    document.getElementById("bsonTime").textContent = item.bsonTime;
+
+    // Load image from backend
+    document.getElementById("face-image").src =
+        "https://nill2.duckdns.org/face_image/" + encodeURIComponent(filename);
+}
+
+document.getElementById("prev").onclick = () => {
+    if (index > 0) index--;
+    display(index);
+};
+
+document.getElementById("next").onclick = () => {
+    if (index < faces.length - 1) index++;
+    display(index);
+};
+
+loadFaces();
+</script>
+
 {% endblock %}

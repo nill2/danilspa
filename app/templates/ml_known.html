@@ -28,7 +28,7 @@
 
 <script>
 const FTP_DOMAIN = "{{ FTP_DOMAIN | default('nill2.duckdns.org') }}";
-const API_BASE = `https://${FTP_DOMAIN}`;  // ✅ Always HTTPS + domain
+const API_BASE = `https://${FTP_DOMAIN}`;
 
 let results = [];
 let currentIndex = 0;
@@ -110,26 +110,36 @@ async function searchPhotos() {
 
 function showPhoto() {
   const photo = results[currentIndex];
+
   const persons =
     (photo.known_persons && photo.known_persons.join(", ")) ||
     (photo.persons && photo.persons.join(", ")) ||
     "Unknown";
-  const date = photo.date || "Unknown";
-  const filename = photo.filename || "N/A";
 
+  const rawDate = photo.bsonTime || photo.date || null;
+  const formattedDate = rawDate ? new Date(rawDate).toLocaleString() : "Unknown";
+
+  const filename = photo.filename || "N/A";
   const safeFilename = encodeURIComponent(filename);
   const imgSrc = `${API_BASE}/face_image/${safeFilename}`;
 
-  const photoDisplay = document.getElementById("photoDisplay");
-  photoDisplay.src = imgSrc;
-  photoDisplay.style.display = "block";
+  document.getElementById("photoDisplay").src = imgSrc;
+  document.getElementById("photoDisplay").style.display = "block";
 
-  document.getElementById("resultInfo").innerText = `Photo ${currentIndex + 1} of ${results.length}`;
-  document.getElementById("photoMeta").innerText = `📅 Date: ${date} | 👤 Persons: ${persons}`;
-  document.getElementById("photoFilename").innerText = `🗂️ File: ${filename}`;
+  document.getElementById("resultInfo").innerText =
+    `Photo ${currentIndex + 1} of ${results.length}`;
 
-  document.getElementById("prevBtn").style.display = currentIndex > 0 ? "inline-block" : "none";
-  document.getElementById("nextBtn").style.display = currentIndex < results.length - 1 ? "inline-block" : "none";
+  document.getElementById("photoMeta").innerText =
+    `📅 Date: ${formattedDate} | 👤 Persons: ${persons}`;
+
+  document.getElementById("photoFilename").innerText =
+    `🗂️ File: ${filename}`;
+
+  document.getElementById("prevBtn").style.display =
+    currentIndex > 0 ? "inline-block" : "none";
+
+  document.getElementById("nextBtn").style.display =
+    currentIndex < results.length - 1 ? "inline-block" : "none";
 }
 
 document.getElementById("prevBtn").onclick = () => {
