@@ -1,30 +1,155 @@
 {% extends "base.html" %}
+
 {% block head %}
     {{ super() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='extended_beauty.css') }}">
 {% endblock %}
-{% block content %}
-    <div class="center"> <!-- Optional: Add a container to center the image -->
-        <h1>Our home entrance</h1> <!-- Add the title -->
-        <img id="cctv-image" src="data:image/jpeg;base64,{{ picture_data }}" width="640" height="480" alt="CCTV Image">
-    </div>
 
-    <script>
-        async function refreshImage() {
-          try {
-            const response = await fetch('{{ url_for("main.fetch_image") }}');
-            if (!response.ok) throw new Error("HTTP " + response.status);
-            const data = await response.text();
-            document.getElementById("cctv-image").src = "data:image/jpeg;base64," + data;
-          } catch (err) {
-            console.error("Failed to fetch image:", err);
-          }
+{% block content %}
+
+<h1 class="text-center mb-4">Our Home Entrance</h1>
+
+<div class="text-center">
+    <img id="cctv-image"
+         class="img-fluid rounded shadow"
+         style="max-height: 480px;"
+         alt="CCTV Image">
+</div>
+
+<p id="cctv-meta" class="text-center text-muted mt-2"></p>
+
+<script>
+/**
+ * CCTV page JS
+ *
+ * - Fetches GET /current_cctv from the backend at FTP_DOMAIN.
+ * - Chooses the best image field available (imageData, data, image).
+ * - Falls back to requesting the photo by filename via /photo_image/<filename>.
+ * - Formats timestamps preferring bsonTime, else numeric date (seconds/ms).
+ * - Displays formatted date in Europe/Amsterdam timezone.
+ */
+
+const FTP_DOMAIN = "{{ FTP_DOMAIN | default('nill2.duckdns.org') }}";
+const API_BASE = `https://${FTP_DOMAIN}`;
+const ENDPOINT = `${API_BASE}/current_cctv`;
+
+/** Format a date value (bsonTime ISO string or numeric epoch) */
+function formatTimestamp(entry) {
+    const options = {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'Europe/Amsterdam'
+    };
+
+    // 1) Prefer bsonTime ISO string if present
+    if (entry && entry.bsonTime) {
+        const d = new Date(entry.bsonTime);
+        if (!isNaN(d)) {
+            return d.toLocaleString(undefined, options);
+        }
+    }
+
+    // 2) Fallback to numeric "date" field (could be seconds or milliseconds)
+    let ts = entry && (entry.date ?? entry.timestamp ?? null);
+    if (ts !== null && ts !== undefined) {
+        // If string of digits, convert
+        if (typeof ts === 'string' && /^\d+$/.test(ts)) {
+            ts = Number(ts);
+        }
+        if (typeof ts === 'number') {
+            // If looks like seconds (10 digits), convert to ms
+            if (ts < 1e12) ts = ts * 1000;
+            const d = new Date(ts);
+            if (!isNaN(d)) {
+                return d.toLocaleString(undefined, options);
+            }
+        }
+    }
+
+    // 3) No usable timestamp
+    return 'Unknown';
+}
+
+/** Determine image source from the entry:
+ * - prefer embedded base64 fields (imageData, data, image)
+ * - if none, and filename present, return backend /photo_image/<filename> URL
+ * - if s3_file_url present, attempt /photo_image/<filename> as well (backend will handle S3)
+ */
+function getImageSource(entry) {
+    if (!entry) return null;
+
+    // common base64 fields
+    const base64 = entry.imageData || entry.data || entry.image || null;
+    if (base64) {
+        // If the field already contains the data URI prefix, avoid double prefix
+        if (typeof base64 === 'string' && base64.startsWith('data:')) {
+            return base64;
+        }
+        return `data:image/jpeg;base64,${base64}`;
+    }
+
+    // If backend stores images separately, use photo_image/<filename>
+    const filename = entry.filename || entry.image_name || entry.file || null;
+    if (filename) {
+        return `${API_BASE}/photo_image/${encodeURIComponent(filename)}`;
+    }
+
+    // As last resort, if s3_file_url exists and backend exposes a proxy route
+    if (entry.s3_file_url && filename) {
+        return `${API_BASE}/photo_image/${encodeURIComponent(filename)}`;
+    }
+
+    return null;
+}
+
+async function refreshImage() {
+    try {
+        const response = await fetch(ENDPOINT, { method: "GET" });
+
+        if (!response.ok) {
+            throw new Error("Backend HTTP " + response.status);
         }
 
-        // Refresh every 5 seconds
-        setInterval(refreshImage, 5000);
-        refreshImage();
-    </script>
+        const data = await response.json();
 
+        if (!data || !data.result) {
+            console.error("Malformed API response:", data);
+            document.getElementById("cctv-meta").innerText = "No image found";
+            return;
+        }
+
+        const entry = data.result;
+
+        // Choose best image source
+        const src = getImageSource(entry);
+        if (!src) {
+            console.warn("No image data or filename available in backend result", entry);
+            document.getElementById("cctv-meta").innerText = "No image available";
+            return;
+        }
+
+        document.getElementById("cctv-image").src = src;
+
+        const timestampStr = formatTimestamp(entry);
+        const filename = entry.filename || entry.image_name || entry.file || 'Unknown';
+
+        document.getElementById("cctv-meta").innerText =
+            `📅 ${timestampStr} — 🗂️ ${filename}`;
+
+    } catch (err) {
+        console.error("Failed to fetch image:", err);
+        document.getElementById("cctv-meta").innerText = "Error fetching image";
+    }
+}
+
+// Refresh every 5 seconds
+setInterval(refreshImage, 5000);
+refreshImage();
+</script>
 
 {% endblock %}
